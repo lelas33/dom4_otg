@@ -21,3 +21,10 @@ require_once __DIR__  . '/../../../../core/php/core.inc.php';
 * Fichier d’inclusion si vous avez plusieurs fichiers de class ou 3rdParty à inclure
 *
 */
+
+if (!defined('COM_DOM2')) {
+  // definition des constantes de l'interface DOM2A
+  require_once dirname(__FILE__) . '/../../core/php/common.inc.php';
+  // Ensemble de fonction de communication avec les centrales DOM 2
+  require_once dirname(__FILE__) . '/../../core/php/dom2_com.php';
+  }
