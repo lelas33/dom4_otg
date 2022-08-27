@@ -1,6 +1,6 @@
 {
-	"id" : "template",
-	"name" : "Template",
+	"id" : "dom4_otg",
+	"name" : "Dom4 Passerelle Opentherm",
 	"specialAttributes" : {
 		"object" : {
 			"toto" : {"name" : {"fr_FR" : "Plop je suis un attribut spécial"},"type" : "input"},
@@ -11,12 +11,12 @@
 		}
 	},
 	"description" : {
-		"fr_FR": "Template servant de base à la création de plugins pour Jeedom"
+		"fr_FR": "Gestion passerelle opentherm"
 	},
 	"licence" : "AGPL",
-	"author" : "Jeedom SAS",
-	"require" : "3.3.39",
-	"category" : "programming",
+	"author" : "lelas33",
+	"require" : "4.0",
+	"category" : "energy",
 	"hasDependency" : false,
 	"hasOwnDeamon" : false,
 	"maxDependancyInstallTime" : 0,
