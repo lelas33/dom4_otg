@@ -5,11 +5,10 @@
 // definition des addresses IP des peripheriques
 // =============================================
   // DOM2 Abri
-  define('HOST_DOM2A_IP', "192.168.1.22");   // Filaire
-//  define('HOST_DOM2A_IP', "192.168.1.32");   // Wifi
-  define('HOST_DOM2A_PO', 30001);
+  // define('HOST_DOM2A_IP', "192.168.1.22");   // Filaire
+  // define('HOST_DOM2A_PO', 30001);
   // DOM2 Garage
-  define('HOST_DOM2G_IP', "192.168.1.23");
+  define('HOST_DOM2G_IP', "192.168.1.6");
   define('HOST_DOM2G_PO', 30001);
 
 
@@ -23,18 +22,20 @@
   define('MCNT3_SETTEMPNA',0x2A) ;          // Controle : definition de la temperature sejour (temperature netatmo)
 
   // Chauffage
-  define('MCHA_SETMODE', 0x30) ;          // Chauffage : Choix du mode actif et du coeff
-  define('MCHA_STCMD',   0x31) ;          // Chauffage : Start d'une commande en mode manuel ou automatique
-  define('MCHA_STPARAM', 0x32) ;          // Chauffage : definition des parametres du chauffage
-  define('MCHA_PROGAJ',  0x33) ;          // Chauffage : Programmation du Mode Auto Jour
-  define('MCHA_PROGAH',  0x34) ;          // Chauffage : Programmation du Mode Auto Hebdo
-  define('MCHA_GETAJ',   0x35) ;          // Chauffage : Relecture du Programme Auto Jour
-  define('MCHA_GETAH',   0x36) ;          // Chauffage : Relecture du Programme Auto Hebdo
-  define('MCHA_STAT_REG',0x37) ;          // Chauffage : Statistiques regulation chauffage
-  define('MCHA_RLD_CONF',0x38) ;          // Chauffage : Rechargement de la configuration depuis carte SD
-  define('MCHA_GET_OT',  0x39) ;          // Chauffage : Capture tous les parametres courant OpenTherm
-  define('MCHA_GET_STAT',0x3A) ;          // Chauffage : retour des statistiques de consommation chauffage et ECS
-  define('MCHA_SAVE_CONF',0x3B);          // Chauffage : Sauvegarde de la configuration sur fichier (hors consignes)
+  define('MCHA_SETMODE',   0x30) ;          // Chauffage : Choix du mode actif et du coeff
+  define('MCHA_STCMD',     0x31) ;          // Chauffage : Start d'une commande en mode manuel ou automatique
+  define('MCHA_STPARAM',   0x32) ;          // Chauffage : definition des parametres du chauffage
+  define('MCHA_PROGAJ',    0x33) ;          // Chauffage : Programmation du Mode Auto Jour
+  define('MCHA_PROGAH',    0x34) ;          // Chauffage : Programmation du Mode Auto Hebdo
+  define('MCHA_GETAJ',     0x35) ;          // Chauffage : Relecture du Programme Auto Jour
+  define('MCHA_GETAH',     0x36) ;          // Chauffage : Relecture du Programme Auto Hebdo
+  define('MCHA_STAT_REG',  0x37) ;          // Chauffage : Statistiques regulation chauffage
+  define('MCHA_RLD_CONF',  0x38) ;          // Chauffage : Rechargement de la configuration depuis carte SD
+  define('MCHA_GET_OT',    0x39) ;          // Chauffage : Capture tous les parametres courant OpenTherm
+  define('MCHA_GET_STAT',  0x3A) ;          // Chauffage : retour des statistiques de consommation chauffage et ECS
+  define('MCHA_SAVE_CONF', 0x3B) ;          // Chauffage : Sauvegarde de la configuration sur fichier (hors consignes)
+  define('MCHA_GET_STS',   0x3C) ;          // Chauffage : Lecture du statut courant
+  define('MCHA_PUSH_TEMPE',0x3D) ;          // Chauffage : Transfert des temperatures courante par piece
 
   // volets
   define('MTLC_OVOLET',  0x80) ;          // Telecommande : Ouverture des volets roulants
@@ -49,8 +50,10 @@
 
 // Liste des capteurs de temperature pour DOM2G
 // ============================================
-  define('NB_PIECES',     6) ;            // Nombre de pieces chauffee et regulees
-  
+  define('NB_PIECES',       8) ;            // Nombre de pieces chauffee et regulees
+  define('NB_TCAP',         8) ;            // Nombre de capteurs de temperature
+  define('TEMP_INVALIDE',   990) ;          // Temperature invalide
+
 // Liste des commandes des messages PC pour DOM2A
 // ==============================================
 // Controle

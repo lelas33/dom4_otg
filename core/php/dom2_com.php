@@ -10,7 +10,7 @@
 function dom2_message_send($socket, $msg, &$ack)
 {
 
-  $lg_mess = 1208;
+  $lg_mess = 1608;
 
   // Preparation du message
   $tab_param = str_repeat(chr(32),$lg_mess);   // longueur trame message max : 4 + 4 + 1200
@@ -61,7 +61,7 @@ function dom2_message_send($socket, $msg, &$ack)
   $ack['nbp'] = ( (ord($tab_param[7]) <<24) | (ord($tab_param[6]) <<16)
                 | (ord($tab_param[5]) << 8) |  ord($tab_param[4]) ) ;
   if ( $ack['nbp'] != 0 ) {
-    if ($ack['nbp'] >= 1200) $ack['nbp'] = 1200;
+    if ($ack['nbp'] >= 1600) $ack['nbp'] = 1600;
     $lg = socket_recv ( $socket, $tab_param, $ack['nbp'], MSG_WAITALL ) ;
     for ($i=0; $i<$ack['nbp']; $i++)
        $ack['param'][$i] = ord($tab_param[$i]) ;

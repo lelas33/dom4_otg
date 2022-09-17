@@ -14,6 +14,38 @@
 * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Gestion des listes de commandes action ou commandes info
+$(".listCmdActionSlider").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'action',subType : 'slider'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+$(".listCmdActionOther").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'action',subType : 'other'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+$(".listCmdInfoNumeric").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'info',subType : 'numeric'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+$(".listCmdInfoOther").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'info',subType : 'string'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+$(".listCmdInfoBinary").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'info',subType : 'binary'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+
 /* Permet la réorganisation des commandes dans l'équipement */
 $("#table_cmd").sortable({
   axis: "y",

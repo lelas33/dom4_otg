@@ -16,15 +16,15 @@
  */
 
 
-var NB_PIECE = 6;
+var NB_PIECE = 8;
 var NB_TAILLE_CONSIGNE = 96;     // Nombre de point de consigne de température par jour ( 1 par 15 mn )
 
 var cons_chauffage_jour    = [[]];
 var cons_chauffage_jouren  = [];
 var cons_chauffage_hebdo   = [[[]]];
 var cons_chauffage_hebdoen = [[]];
-var temp_name  = ["Chambre.P", "Chambre.E", "Chambre.B", "SéjourNA", "Bureau",  "Invité" ];
-var temp_color = ["#F09880",   "#FF1000",   "#0000FF",   "#CC00FF",  "#D06820", "#880088" ];
+var temp_name  = [];
+var temp_color = ["#F09880",   "#FF1000",   "#0000FF",   "#CC00FF",  "#D06820", "#880088",  "#D06820", "#880088" ];
 var sel_jour = 0;
 var jour_name = ["Lundi", "Mardi", "Mercredi", "Jeudi",   "Vendredi",  "Samedi", "Dimanche" ];
 
@@ -112,8 +112,10 @@ function dom2g_update( save ) {
     param[8]= parseInt($("#ipente_cdc").val()*10.0); // pente courbe de chauffe temp. int
     param[9]= 0xff;
     for (p=0; p<NB_PIECE; p++) {
-      ret = $('input[name=jour_enp'+p+']').is(':checked');
-      param[10+p]= ret? 1 : 0;
+      ret1 = $('input[name=jour_enp'+p+']').is(':checked');
+      ret2 = $('input[name=jour_enp'+p+']').is(':disabled');
+      param[10+p]= ret1 ? 1:(ret2?255:0);
+      // console.log("[dom2g_update] Piece : " + p + " / ret1 = " + ret1 + " / ret2 = " + ret2 + " / enable = " + param[10+p]);
     }
     $.ajax({
       type: 'POST',
@@ -182,6 +184,8 @@ function getConsignes() {
         for (p=0;p<NB_PIECE;p++) {
           cons_chauffage_jour[p] = [];
           cons_chauffage_jouren[p] = cons_chau.jour.enabled[p];
+          temp_name[p] = cons_chau.nom_piece[p];
+          // console.log("[getConsignes] Piece : " + temp_name[p] + " / enabled = " + cons_chauffage_jouren[p]);
           for (i=0;i<NB_TAILLE_CONSIGNE;i++) {
             cons_chauffage_jour[p].push ([i*15*60*1000, parseInt(cons_chau.jour.consigne[p][i],10)/10.0]);
           }
@@ -210,7 +214,6 @@ function getConsignes() {
         dispay_consigne_jour();
         dispay_consigne_hebdo();
         dispay_enable_jour();
-        // dispay_enable_hebdo();
       }
     });
 }
@@ -288,13 +291,15 @@ function drawSimpleGraph(_el, _serie) {
 // Affichage du graphe de consigne jour
 // ====================================
 function dispay_consigne_jour() {
-  var Series = [{},{},{},{},{},{}];
+  var Series = [];
   for (i=0;i<NB_PIECE;i++) {
+    Series[i] = {};
     Series[i].step = true;
     Series[i].name = temp_name[i];
     Series[i].color = temp_color[i];
     Series[i].data = cons_chauffage_jour[i];
     Series[i].type = 'line';
+    Series[i].visible = (cons_chauffage_jouren[i] != 255) ? true:false;
   }
   drawSimpleGraph('div_ConsignesJour', Series);
 }
@@ -302,12 +307,15 @@ function dispay_consigne_jour() {
 // Affichage du graphe de consigne Semaine
 // ====================================
 function dispay_consigne_hebdo() {
-  var Series = [{},{},{},{},{},{}];
+  var Series = [];
   for (i=0;i<NB_PIECE;i++) {
+    Series[i] = {};
     Series[i].step = true;
     Series[i].name = temp_name[i];
+    Series[i].color = temp_color[i];
     Series[i].data = cons_chauffage_hebdo[sel_jour][i];
     Series[i].type = 'line';
+    Series[i].visible = (cons_chauffage_jouren[i] != 255) ? true:false;
   }
   drawSimpleGraph('div_ConsignesHebdo', Series);
 }
@@ -321,35 +329,28 @@ function dispay_enable_jour() {
   for (i=0;i<NB_PIECE/2;i++) {
     $("#piecej_enable").append('<tr>');
     p = 2*i;
-    chkd = (cons_chauffage_jouren[p] == 1) ? 'checked' : '';
-    $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+temp_name[p]+'</th>');
+    if (cons_chauffage_jouren[p] == 1)
+      chkd = 'checked';
+    else if (cons_chauffage_jouren[p] == 255)
+      chkd = 'disabled="true"';
+    else
+      chkd = '';
+    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+temp_name[p]+'</s>' : temp_name[p];
+    $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+nom_piece+'</th>');
     p = 2*i+1;
-    chkd = (cons_chauffage_jouren[p] == 1) ? 'checked' : '';
-    $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+temp_name[p]+'</th>');
+    if (cons_chauffage_jouren[p] == 1)
+      chkd = 'checked';
+    else if (cons_chauffage_jouren[p] == 255)
+      chkd = 'disabled="true"';
+    else
+      chkd = '';
+    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+temp_name[p]+'</s>' : temp_name[p];
+    $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+nom_piece+'</th>');
     $("#piecej_enable").append('</tr>');
   }
   $("#piecej_enable").append('</table');
 }
       
-
-// Mise a jour des flags enable mode semaine
-// =========================================
-function dispay_enable_hebdo() {
-  var chkd;
-  $("#pieceh_enable").empty();
-  $("#pieceh_enable").append('<table width="100%">');
-  for (i=0;i<NB_PIECE/2;i++) {
-    $("#pieceh_enable").append('<tr>');
-    p = 2*i;
-    chkd = (cons_chauffage_hebdoen[sel_jour][p] == 1) ? 'checked' : '';
-    $("#pieceh_enable").append('<th width="15%" align="left"><input type="checkbox" name="hebdo_enp'+p+'" '+chkd+'>'+temp_name[p]+'</th>');
-    p = 2*i+1;
-    chkd = (cons_chauffage_hebdoen[sel_jour][p] == 1) ? 'checked' : '';
-    $("#pieceh_enable").append('<th width="15%" align="left"><input type="checkbox" name="hebdo_enp'+p+'" '+chkd+'>'+temp_name[p]+'</th>');
-    $("#pieceh_enable").append('</tr>');
-  }
-  $("#pieceh_enable").append('</table');
-}
 
   // instance datepicker
   // ===================

@@ -23,6 +23,14 @@ if (!isConnect('admin')) {
 }
 $eq= eqLogic::byType('dom4_otg');
 
+
+// Recupere le nom des pieces
+$nom_pieces = [];
+for ($i=0; $i<NB_PIECES; $i++) {
+  $nom_piece = $eq[0]->getConfiguration("nom_piece_".($i+1));
+  array_push($nom_pieces, $nom_piece);
+}
+
 /* Statistiques regulation */
 echo '<div>';
   echo "<div id='div_statregul'>";
@@ -71,7 +79,7 @@ foreach ($eq as $eqLogic) {
       echo '<tr>';
         echo '<th align="center"><p style="color:grey;">Pièce la plus froide</p></th>';
         echo '<th align="center"><p style="color:grey;">'.$val7.' °C</p></th>';
-        echo '<th align="center"><p style="color:grey;">'.$nom_piece[$val8].'</p></th>';
+        echo '<th align="center"><p style="color:grey;">'.$nom_pieces[$val8].'</p></th>';
       echo '</tr>';
       echo '<tr>';
         echo '<th align="center"><p style="color:grey;">Température extérieure</p></th>';

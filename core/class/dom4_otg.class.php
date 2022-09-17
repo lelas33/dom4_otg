@@ -38,8 +38,18 @@ class dom4_otg extends eqLogic {
 
   /*
   * Fonction exécutée automatiquement toutes les minutes par Jeedom
-  public static function cron() {}
   */
+  public static function cron() {
+      // Mise à jour des infos
+      // ---------------------
+      log::add('dom4_otg', 'info', 'cron:Mise à jour données');
+      foreach (eqLogic::byType('dom4_otg') as $dom4otg) {
+        if ($dom4otg->getIsEnable() == 1) {
+          $dom4otg->getInfos();
+        }
+      }
+    
+  }
 
   /*
   * Fonction exécutée automatiquement toutes les 5 minutes par Jeedom
@@ -71,6 +81,80 @@ class dom4_otg extends eqLogic {
   public static function cronDaily() {}
   */
 
+    private function getListeDefaultCommandes()
+    {
+      return array(
+        //                         name                                     type     subtype,     unit  hist visible  generic_type    template_dashboard  template_mobile
+        // Infos : parametres norme OT
+        "otg_0"           => array('Status'                               , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_1"           => array('Control setpoint'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_2"           => array('Master configuration'                 , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_3"           => array('Slave configuration'                  , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_5"           => array('Application-specific flags'           , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_14"          => array('Maximum relative modulation level'    , 'info',  'numeric',  "%",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_15"          => array('Boiler capacity and modulation limits', 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_16"          => array('Room setpoint'                        , 'info',  'numeric', "°C",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_17"          => array('Relative modulation level'            , 'info',  'numeric',  "%",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_20"          => array('Day of week and time of day'          , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_21"          => array('Date'                                 , 'info',  'string',    "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_22"          => array('Year'                                 , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_24"          => array('Room temperature'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_25"          => array('Boiler water temperature'             , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_26 "         => array('DHW temperature'                      , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_27 "         => array('Outside temperature'                  , 'info',  'numeric', "°C",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_48 "         => array('DHW setpoint boundaries'              , 'info',  'string',   "",    1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_49 "         => array('Max CH setpoint boundaries'           , 'info',  'string',   "",    1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_56 "         => array('DHW setpoint'                         , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_57 "         => array('Max CH water setpoint'                , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_116"         => array('Burner starts'                        , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_119"         => array('DHW burner starts'                    , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_120"         => array('Burner operation hours'               , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_123"         => array('DHW burner operation hours'           , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_0"         => array('Fault indication'                     , 'info',  'binary',    "",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_1"         => array('CH Mode'                              , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_2"         => array('DHW Mode'                             , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_3"         => array('Flame Status'                         , 'info',  'numeric',   "",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_4"         => array('CH Enable'                            , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_0_5"         => array('DHW Enable'                           , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cons_ch_a"   => array('Consommation chauffage jour'          , 'info',  'numeric',"kWh",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cons_ecs_a"  => array('Consommation ECS jour'                , 'info',  'numeric',"kWh",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_puiss_ch"    => array('Puissance chauffage'                  , 'info',  'numeric',  "W",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_puiss_ecs"   => array('Puissance ECS'                        , 'info',  'numeric',  "W",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_modec_value" => array('Mode chauffage'                       , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+
+        // Infos : parametres supplementaire (hors norme OT)
+        "otg_40"          => array('Température pièce la plus froide'     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_41"          => array('Pièce la plus froide'                 , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_42"          => array('Température de départ chaudière'      , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cconfort"    => array('Consigne générale'                    , 'info',  'numeric', "°C",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_modec_name"  => array('Nom Mode chauffage'                   , 'info',  'string',    "",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+
+        // Infos : Consignes courante par piece
+        "otg_cs_room_1"   => array('Consigne pièce 1'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_2"   => array('Consigne pièce 2'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_3"   => array('Consigne pièce 3'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_4"   => array('Consigne pièce 4'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_5"   => array('Consigne pièce 5'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_6"   => array('Consigne pièce 6'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_7"   => array('Consigne pièce 7'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_8"   => array('Consigne pièce 8'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        
+        //                          name                                    type      subtype,    unit  hist visible  generic_type      template_dashboard  template_mobile
+        // Commandes : modes chauffage                                    
+        "modec_bypass"    => array('Thermostat origine'                   , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_arret"     => array('Arrêt complet'                        , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_ete"       => array('Eté'                                  , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_hiverj"    => array('Hiver Journalier'                     , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_hiverh"    => array('Hiver Hebdomadaire'                   , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_hiverv"    => array('Hiver Vacances'                       , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        // Commandes : Autres                                             
+        "set_cconfort"    => array('Réglage Consigne générale'            , 'action', 'slider',   "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
+        "modec_setmode"   => array('Choix mode chauffage'                 , 'action', 'message',  "",   0,   0,       "GENERIC_ACTION", 'default',          'default') 
+      );
+    }
+
+
+
   /*     * *********************Méthodes d'instance************************* */
 
   // Fonction exécutée automatiquement avant la création de l'équipement
@@ -95,136 +179,67 @@ class dom4_otg extends eqLogic {
 
   // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
   public function postSave() {
-      log::add('dom4_otg', 'info', 'postUpdate');
+      // creation de la liste des commandes / infos
+      // ------------------------------------------
+      foreach( $this->getListeDefaultCommandes() as $id => $data) {
+        list($name, $type, $subtype, $unit, $hist, $visible, $generic_type, $template_dashboard, $template_mobile) = $data;
+        $cmd = $this->getCmd(null, $id);
+        if (! is_object($cmd)) {
+          // New CMD
+          $cmd = new dom4_otgCmd();
+          $cmd->setName($name);
+          $cmd->setEqLogic_id($this->getId());
+          $cmd->setType($type);
+          if ($type == "info") {
+            $cmd->setDisplay ("showStatsOndashboard",0);
+            $cmd->setDisplay ("showStatsOnmobile",0);
+          }
+          $cmd->setSubType($subtype);
+          if ($id == "set_cconfort") {
+            $cmd->setConfiguration('minValue', 10);
+            $cmd->setConfiguration('maxValue', 30);
+            $cmd->setConfiguration('step', 0.5);
+          }
+          $cmd->setUnite($unit);
+          $cmd->setLogicalId($id);
+          $cmd->setIsHistorized($hist);
+          $cmd->setIsVisible($visible);
+          $cmd->setDisplay('generic_type', $generic_type);
+          $cmd->setTemplate('dashboard', $template_dashboard);
+          $cmd->setTemplate('mobile', $template_mobile);
+          $cmd->save();
+        }
+        else {
+          // Upadate CMD
+          $cmd->setType($type);
+          if ($type == "info") {
+            $cmd->setDisplay ("showStatsOndashboard",0);
+            $cmd->setDisplay ("showStatsOnmobile",0);
+          }
+          $cmd->setSubType($subtype);
+          if ($id == "set_cconfort") {
+            $cmd->setConfiguration('minValue', 10);
+            $cmd->setConfiguration('maxValue', 30);
+            $cmd->setConfiguration('step', 0.5);
+          }
+          $cmd->setUnite($unit);
+          // $cmd->setIsHistorized($hist);
+          // $cmd->setIsVisible($visible);
+          $cmd->setDisplay('generic_type', $generic_type);
+          $cmd->setTemplate('dashboard', $template_dashboard);
+          $cmd->setTemplate('mobile', $template_mobile);
+        }
+      }
+
+      // couplage des commandes et infos : "set_cconfort" et "otg_cconfort"
+      $cmd_act = $this->getCmd(null, 'set_cconfort');
+      $cmd_inf = $this->getCmd(null, 'otg_cconfort');
+      if ((is_object($cmd_act)) and (is_object($cmd_inf))) {
+        $cmd_act->setValue($cmd_inf->getid());
+        $cmd_act->save();
+      }
       
-      // Création des commandes / Infos du plugin OTG
-      // --------------------------------------------
-      // Infos
-      define('NB_ID_LABEL_INFO', 46);      
-      $otg_info = array();
-      $otg_info[ 0]['lid'] = '0';          $otg_info[ 0]['name'] = 'Status'                               ;  $otg_info[ 0]['type'] = 'o';  $otg_info[ 0]['unit'] = 'n'; $otg_info[ 0]['visible'] = 0;
-      $otg_info[ 1]['lid'] = '1';          $otg_info[ 1]['name'] = 'Control setpoint'                     ;  $otg_info[ 1]['type'] = 'n';  $otg_info[ 1]['unit'] = 'd'; $otg_info[ 1]['visible'] = 0;
-      $otg_info[ 2]['lid'] = '2';          $otg_info[ 2]['name'] = 'Master configuration'                 ;  $otg_info[ 2]['type'] = 'o';  $otg_info[ 2]['unit'] = 'n'; $otg_info[ 2]['visible'] = 0;
-      $otg_info[ 3]['lid'] = '3';          $otg_info[ 3]['name'] = 'Slave configuration'                  ;  $otg_info[ 3]['type'] = 'o';  $otg_info[ 3]['unit'] = 'n'; $otg_info[ 3]['visible'] = 0;
-      $otg_info[ 4]['lid'] = '5';          $otg_info[ 4]['name'] = 'Application-specific flags'           ;  $otg_info[ 4]['type'] = 'o';  $otg_info[ 4]['unit'] = 'n'; $otg_info[ 4]['visible'] = 0;
-      $otg_info[ 5]['lid'] = '14';         $otg_info[ 5]['name'] = 'Maximum relative modulation level'    ;  $otg_info[ 5]['type'] = 'n';  $otg_info[ 5]['unit'] = 'p'; $otg_info[ 5]['visible'] = 0;
-      $otg_info[ 6]['lid'] = '15';         $otg_info[ 6]['name'] = 'Boiler capacity and modulation limits';  $otg_info[ 6]['type'] = 'o';  $otg_info[ 6]['unit'] = 'n'; $otg_info[ 6]['visible'] = 0;
-      $otg_info[ 7]['lid'] = '16';         $otg_info[ 7]['name'] = 'Room setpoint'                        ;  $otg_info[ 7]['type'] = 'n';  $otg_info[ 7]['unit'] = 'd'; $otg_info[ 7]['visible'] = 1;
-      $otg_info[ 8]['lid'] = '17';         $otg_info[ 8]['name'] = 'Relative modulation level'            ;  $otg_info[ 8]['type'] = 'n';  $otg_info[ 8]['unit'] = 'p'; $otg_info[ 8]['visible'] = 0;
-      $otg_info[ 9]['lid'] = '20';         $otg_info[ 9]['name'] = 'Day of week and time of day'          ;  $otg_info[ 9]['type'] = 'o';  $otg_info[ 9]['unit'] = 'n'; $otg_info[ 9]['visible'] = 0;
-      $otg_info[10]['lid'] = '21';         $otg_info[10]['name'] = 'Date'                                 ;  $otg_info[10]['type'] = 'o';  $otg_info[10]['unit'] = 'n'; $otg_info[10]['visible'] = 0;
-      $otg_info[11]['lid'] = '22';         $otg_info[11]['name'] = 'Year'                                 ;  $otg_info[11]['type'] = 'n';  $otg_info[11]['unit'] = 'n'; $otg_info[11]['visible'] = 0;
-      $otg_info[12]['lid'] = '24';         $otg_info[12]['name'] = 'Room temperature'                     ;  $otg_info[12]['type'] = 'n';  $otg_info[12]['unit'] = 'd'; $otg_info[12]['visible'] = 0;
-      $otg_info[13]['lid'] = '25';         $otg_info[13]['name'] = 'Boiler water temperature'             ;  $otg_info[13]['type'] = 'n';  $otg_info[13]['unit'] = 'd'; $otg_info[13]['visible'] = 0;
-      $otg_info[14]['lid'] = '26';         $otg_info[14]['name'] = 'DHW temperature'                      ;  $otg_info[14]['type'] = 'n';  $otg_info[14]['unit'] = 'd'; $otg_info[14]['visible'] = 0;
-      $otg_info[15]['lid'] = '27';         $otg_info[15]['name'] = 'Outside temperature'                  ;  $otg_info[15]['type'] = 'n';  $otg_info[15]['unit'] = 'd'; $otg_info[15]['visible'] = 1;
-      $otg_info[16]['lid'] = '48';         $otg_info[16]['name'] = 'DHW setpoint boundaries'              ;  $otg_info[16]['type'] = 'o';  $otg_info[16]['unit'] = 'n'; $otg_info[16]['visible'] = 0;
-      $otg_info[17]['lid'] = '49';         $otg_info[17]['name'] = 'Max CH setpoint boundaries'           ;  $otg_info[17]['type'] = 'o';  $otg_info[17]['unit'] = 'n'; $otg_info[17]['visible'] = 0;
-      $otg_info[18]['lid'] = '56';         $otg_info[18]['name'] = 'DHW setpoint'                         ;  $otg_info[18]['type'] = 'n';  $otg_info[18]['unit'] = 'd'; $otg_info[18]['visible'] = 0;
-      $otg_info[19]['lid'] = '57';         $otg_info[19]['name'] = 'Max CH water setpoint'                ;  $otg_info[19]['type'] = 'n';  $otg_info[19]['unit'] = 'n'; $otg_info[19]['visible'] = 0;
-      $otg_info[20]['lid'] = '116';        $otg_info[20]['name'] = 'Burner starts'                        ;  $otg_info[20]['type'] = 'n';  $otg_info[20]['unit'] = 'n'; $otg_info[20]['visible'] = 0;
-      $otg_info[21]['lid'] = '119';        $otg_info[21]['name'] = 'DHW burner starts'                    ;  $otg_info[21]['type'] = 'n';  $otg_info[21]['unit'] = 'n'; $otg_info[21]['visible'] = 0;
-      $otg_info[22]['lid'] = '120';        $otg_info[22]['name'] = 'Burner operation hours'               ;  $otg_info[22]['type'] = 'n';  $otg_info[22]['unit'] = 'n'; $otg_info[22]['visible'] = 0;
-      $otg_info[23]['lid'] = '123';        $otg_info[23]['name'] = 'DHW burner operation hours'           ;  $otg_info[23]['type'] = 'n';  $otg_info[23]['unit'] = 'n'; $otg_info[23]['visible'] = 0;
-      $otg_info[24]['lid'] = '0_0';        $otg_info[24]['name'] = 'Fault indication'                     ;  $otg_info[24]['type'] = 'b';  $otg_info[24]['unit'] = 'n'; $otg_info[24]['visible'] = 1;
-      $otg_info[25]['lid'] = '0_1';        $otg_info[25]['name'] = 'CH Mode'                              ;  $otg_info[25]['type'] = 'n';  $otg_info[25]['unit'] = 'n'; $otg_info[25]['visible'] = 0;
-      $otg_info[26]['lid'] = '0_2';        $otg_info[26]['name'] = 'DHW Mode'                             ;  $otg_info[26]['type'] = 'n';  $otg_info[26]['unit'] = 'n'; $otg_info[26]['visible'] = 0;
-      $otg_info[27]['lid'] = '0_3';        $otg_info[27]['name'] = 'Flame Status'                         ;  $otg_info[27]['type'] = 'n';  $otg_info[27]['unit'] = 'n'; $otg_info[27]['visible'] = 1;
-      $otg_info[28]['lid'] = '0_4';        $otg_info[28]['name'] = 'CH Enable'                            ;  $otg_info[28]['type'] = 'n';  $otg_info[28]['unit'] = 'n'; $otg_info[28]['visible'] = 0;
-      $otg_info[29]['lid'] = '0_5';        $otg_info[29]['name'] = 'DHW Enable'                           ;  $otg_info[29]['type'] = 'n';  $otg_info[29]['unit'] = 'n'; $otg_info[29]['visible'] = 0;
-      $otg_info[30]['lid'] = 'cons_ch_a';  $otg_info[30]['name'] = 'Consommation chauffage jour'          ;  $otg_info[30]['type'] = 'n';  $otg_info[30]['unit'] = 'k'; $otg_info[30]['visible'] = 1;
-      $otg_info[31]['lid'] = 'cons_ecs_a'; $otg_info[31]['name'] = 'Consommation ECS jour'                ;  $otg_info[31]['type'] = 'n';  $otg_info[31]['unit'] = 'k'; $otg_info[31]['visible'] = 1;
-      $otg_info[32]['lid'] = 'puiss_ch';   $otg_info[32]['name'] = 'Puissance chauffage'                  ;  $otg_info[32]['type'] = 'n';  $otg_info[32]['unit'] = 'w'; $otg_info[32]['visible'] = 1;
-      $otg_info[33]['lid'] = 'puiss_ecs';  $otg_info[33]['name'] = 'Puissance ECS'                        ;  $otg_info[33]['type'] = 'n';  $otg_info[33]['unit'] = 'w'; $otg_info[33]['visible'] = 1;
-      $otg_info[34]['lid'] = 'modec_value';$otg_info[34]['name'] = 'Mode chauffage'                       ;  $otg_info[34]['type'] = 'n';  $otg_info[34]['unit'] = 'n'; $otg_info[34]['visible'] = 0;
-      // parametres supplementaire (hors norme OT)
-      $otg_info[35]['lid'] = '40';         $otg_info[35]['name'] = 'Température pièce la plus froide'     ;  $otg_info[35]['type'] = 'n';  $otg_info[35]['unit'] = 'd'; $otg_info[35]['visible'] = 0;
-      $otg_info[36]['lid'] = '41';         $otg_info[36]['name'] = 'Pièce la plus froide'                 ;  $otg_info[36]['type'] = 'n';  $otg_info[36]['unit'] = 'n'; $otg_info[36]['visible'] = 0;
-      $otg_info[37]['lid'] = '42';         $otg_info[37]['name'] = 'Température de départ chaudière'      ;  $otg_info[37]['type'] = 'n';  $otg_info[37]['unit'] = 'd'; $otg_info[37]['visible'] = 0;
-      $otg_info[38]['lid'] = 'cconfort';   $otg_info[38]['name'] = 'Consigne générale'                    ;  $otg_info[38]['type'] = 'n';  $otg_info[38]['unit'] = 'd'; $otg_info[38]['visible'] = 1;
-      $otg_info[39]['lid'] = 'modec_name'; $otg_info[39]['name'] = 'Nom Mode chauffage'                   ;  $otg_info[39]['type'] = 'o';  $otg_info[39]['unit'] = 'n'; $otg_info[39]['visible'] = 1;
-      // Consignes courante par piece (hors norme OT)
-      $otg_info[40]['lid'] = 'cs_room_0';  $otg_info[40]['name'] = 'Consigne0:Ch.Parents'                 ;  $otg_info[40]['type'] = 'n';  $otg_info[40]['unit'] = 'd'; $otg_info[40]['visible'] = 0;
-      $otg_info[41]['lid'] = 'cs_room_1';  $otg_info[41]['name'] = 'Consigne1:Ch.Etienne'                 ;  $otg_info[41]['type'] = 'n';  $otg_info[41]['unit'] = 'd'; $otg_info[41]['visible'] = 0;
-      $otg_info[42]['lid'] = 'cs_room_2';  $otg_info[42]['name'] = 'Consigne2:Ch.Baptiste'                ;  $otg_info[42]['type'] = 'n';  $otg_info[42]['unit'] = 'd'; $otg_info[42]['visible'] = 0;
-      $otg_info[43]['lid'] = 'cs_room_3';  $otg_info[43]['name'] = 'Consigne3:Sejour'                     ;  $otg_info[43]['type'] = 'n';  $otg_info[43]['unit'] = 'd'; $otg_info[43]['visible'] = 0;
-      $otg_info[44]['lid'] = 'cs_room_4';  $otg_info[44]['name'] = 'Consigne4:Bureau'                     ;  $otg_info[44]['type'] = 'n';  $otg_info[44]['unit'] = 'd'; $otg_info[44]['visible'] = 0;
-      $otg_info[45]['lid'] = 'cs_room_5';  $otg_info[45]['name'] = 'Consigne5:Ch.invité'                  ;  $otg_info[45]['type'] = 'n';  $otg_info[45]['unit'] = 'd'; $otg_info[45]['visible'] = 0;
-
-      // commandes
-      define('NB_ID_LABEL_CMD', 8);      
-      $otg_cmd = array();
-        // modes chauffage
-      $otg_cmd[ 0]['lid'] = 'modec_bypass';  $otg_cmd[ 0]['name'] = 'Mode thermostat origine'    ;  $otg_cmd[ 0]['type'] = 'o';
-      $otg_cmd[ 1]['lid'] = 'modec_arret';   $otg_cmd[ 1]['name'] = 'Mode Arrêt complet'         ;  $otg_cmd[ 1]['type'] = 'o';
-      $otg_cmd[ 2]['lid'] = 'modec_ete';     $otg_cmd[ 2]['name'] = 'Mode Eté'                   ;  $otg_cmd[ 2]['type'] = 'o';
-      $otg_cmd[ 3]['lid'] = 'modec_hiverj';  $otg_cmd[ 3]['name'] = 'Mode Hiver Journalier'      ;  $otg_cmd[ 3]['type'] = 'o';
-      $otg_cmd[ 4]['lid'] = 'modec_hiverh';  $otg_cmd[ 4]['name'] = 'Mode Hiver Hebdomadaire'    ;  $otg_cmd[ 4]['type'] = 'o';
-      $otg_cmd[ 5]['lid'] = 'modec_hiverv';  $otg_cmd[ 5]['name'] = 'Mode Hiver Vacances'        ;  $otg_cmd[ 5]['type'] = 'o';
-      $otg_cmd[ 6]['lid'] = 'set_cconfort';  $otg_cmd[ 6]['name'] = 'Réglage Consigne générale'  ;  $otg_cmd[ 6]['type'] = 's';
-      $otg_cmd[ 7]['lid'] = 'modec_setmode'; $otg_cmd[ 7]['name'] = 'Choix mode chauffage'       ;  $otg_cmd[ 7]['type'] = 'm';
-
-      // Création des infos
-      for ($i=0; $i<NB_ID_LABEL_INFO; $i++) {
-        $info = $this->getCmd(null, 'otg_'.$otg_info[$i]['lid']);
-        if (!is_object($info)) {
-          $info = new dom4_otgCmd();
-          $info->setName(__($otg_info[$i]['name'], __FILE__));
-        }
-        $info->setLogicalId('otg_'.$otg_info[$i]['lid']);
-        $info->setEqLogic_id($this->getId());
-        if ($otg_info[$i]['unit'] == 'd')
-          $info->setUnite('°C');
-        else if ($otg_info[$i]['unit'] == 'p')
-          $info->setUnite('%');
-        else if ($otg_info[$i]['unit'] == 'k')
-          $info->setUnite('kWh');
-        else if ($otg_info[$i]['unit'] == 'w')
-          $info->setUnite('W');
-        else
-          $info->setUnite('');
-        $info->setType('info');
-        if ($otg_info[$i]['type'] == 'n') {
-          $info->setSubType('numeric');
-          $info->setTemplate('dashboard','badge');
-        }
-        else if ($otg_info[$i]['type'] == 'b') 
-          $info->setSubType('binary');
-        else if ($otg_info[$i]['type'] == 'o') 
-          $info->setSubType('string');
-        $info->setIsHistorized(1);
-        if ($otg_info[$i]['visible'] == 1) 
-          $info->setIsVisible(1);
-        else
-          $info->setIsVisible(0);
-        $info->save();
-      }
-      // Création des commandes
-      for ($i=0; $i<NB_ID_LABEL_CMD; $i++) {
-        $command = $this->getCmd(null, $otg_cmd[$i]['lid']);
-        if (!is_object($command)) {
-          $command = new dom4_otgCmd();
-          $command->setName(__($otg_cmd[$i]['name'], __FILE__));
-        }
-        $command->setLogicalId($otg_cmd[$i]['lid']);
-        $command->setType('action');
-        if ($otg_cmd[$i]['type'] == 'o') 
-          $command->setSubType('other');
-        else if ($otg_cmd[$i]['type'] == 's') {
-          $command->setSubType('slider');
-          $command->setConfiguration('minValue', 0);
-          $command->setConfiguration('maxValue', 30);
-          $command->setConfiguration('step', 0.5);
-        }
-        else if ($otg_cmd[$i]['type'] == 'm') {
-          $command->setSubType('message');
-          $command->setIsVisible(0);
-        }
-        $command->setEqLogic_id($this->getId());
-        $command->save();
-      }
-     
-      // Fonction refresh data
+      // ajout de la commande refresh data
       $refresh = $this->getCmd(null, 'refresh');
       if (!is_object($refresh)) {
         $refresh = new dom4_otgCmd();
@@ -234,7 +249,8 @@ class dom4_otg extends eqLogic {
       $refresh->setLogicalId('refresh');
       $refresh->setType('action');
       $refresh->setSubType('other');
-      $refresh->save();      
+      $refresh->save();
+      log::add('dom4_otg','debug','postSave:Ajout ou Mise des commandes et infos');
   }
 
   // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -257,15 +273,41 @@ public function getInfos() {
   $socket = dom2_start_socket ( "G" );
   
   // 1) envoi du message d'interrogation à DOM2G sur les info generales
-  $msg['cmd'] = MCNT3_GETSTS ;
+  $msg['cmd'] = MCHA_GET_STS ;
   $msg['nbp'] = 0x00 ;
   $ack = array();
   // Envoi du message de commande
   dom2_message_send ($socket, $msg, $ack);
-  $current_modec = $ack['param'][0x10];
-  $cconfort      = (($ack['param'][0x12] - 128) + 200)/10;  // Consigne generale centree sur 20 deg
+  $current_modec = $ack['param'][0x0];
+  $cconfort      = (($ack['param'][0x2] - 128) + 200)/10;  // Consigne generale centree sur 20 deg
+  log::add('dom4_otg','debug','getInfos:current_modec='.$current_modec.' / cconfort='.$cconfort);
 
-  // 2)  envoi du message d'interrogation à DOM2G sur les parametres Opentherm
+  // 2) envoi du message de definition de temperature courante par piece
+  $msg['cmd'] = MCHA_PUSH_TEMPE ;
+  $msg['nbp'] = NB_TCAP*2 ;
+  $buf_tempe = '( ';
+  for ($i=0; $i<NB_TCAP; $i++) {
+    $tempe = TEMP_INVALIDE;
+    // Recuperation de la commande d'acces au capteur de temperature d'apres la page de configuration de l'equipement
+    $temp_cmd_id = str_replace('#', '', $this->getConfiguration("tempe_piece_".($i+1)));
+    // log::add('dom4_otg','debug','getInfos:temp_cmd('.$i.') = '.$temp_cmd_id);
+    $temp_cmd = cmd::byId($temp_cmd_id);
+    // Interrogation du capteur sur sa temperature courante
+    if (($temp_cmd_id != "") and (is_object($temp_cmd))) {
+      $tempe = intval($temp_cmd->execCmd()*10+0.5);
+    }
+    $buf_tempe = $buf_tempe. $tempe.', ';
+    $msg['param'][2*$i  ] = ($tempe     & 0xff);
+    $msg['param'][2*$i+1] = ($tempe >>8)& 0xff;
+  }
+  $buf_tempe = $buf_tempe.')';
+  log::add('dom4_otg','debug','getInfos:tempe('.NB_TCAP.') = '.$buf_tempe);
+
+  $ack = array();
+  // Envoi du message de commande
+  dom2_message_send ($socket, $msg, $ack);
+
+  // 3)  envoi du message d'interrogation à DOM2G sur les parametres Opentherm
   $msg['cmd'] = MCHA_GET_OT ;
   $msg['nbp'] = 0x00 ;
   // Envoi du message de commande
@@ -279,7 +321,7 @@ public function getInfos() {
     $param_ot["value"][$i]   = $ack['param'][4*$i+3] * 256 + $ack['param'][4*$i+2];
     }
 
-  // 3) envoi du message d'interrogation à DOM2G sur les statistiques chauffage
+  // 4) envoi du message d'interrogation à DOM2G sur les statistiques chauffage
   $msg['cmd'] = MCHA_GET_STAT;
   $msg['nbp'] = 0x00 ;
 
@@ -292,7 +334,7 @@ public function getInfos() {
   $stat_conso_chaudiere["puiss_chau"]      = ($ack['param'][11] <<24) + ($ack['param'][10] <<16) + ($ack['param'][ 9] <<8) + $ack['param'][ 8];
   $stat_conso_chaudiere["puiss_dhw"]       = ($ack['param'][15] <<24) + ($ack['param'][14] <<16) + ($ack['param'][13] <<8) + $ack['param'][12];
 
-  // 4) envoi du message d'interrogation à DOM2G sur les consignes courantes par piece (stat regulation)
+  // 5) envoi du message d'interrogation à DOM2G sur les consignes courantes par piece (stat regulation)
   $msg['cmd'] = MCHA_STAT_REG;
   $msg['nbp'] = 0x00 ;
 
@@ -305,7 +347,7 @@ public function getInfos() {
     $tmp = $ack['param'][$offs++] + 256 * $ack['param'][$offs++];
     if ($tmp & 0x8000) $tmp = (($tmp & 0x7fff) - 0x8000);
     $stat_regulation["reg_consi"][$piece] = $tmp/10.0;
-    $offs+=10;
+    $offs+=14;
   }
 
   // Fermeture du socket TCP/IP
@@ -416,6 +458,7 @@ public function getInfos() {
       $cmd->event($stat_regulation["reg_consi"][$piece]);
     }
     // Mise a jour consigne Vanne radiateur si besoin
+    /*
     $exp_name = "Vanne_".$nom_piece[$piece];
     foreach (eqLogic::byType('openzwave') as $zw_device) {
       if (($zw_device->getIsEnable() == 1) && ($zw_device->getName() == $exp_name)) {
@@ -443,6 +486,7 @@ public function getInfos() {
         }
       }
     }
+    */
   }
 
   // Prise en compte du mode chauffage courant

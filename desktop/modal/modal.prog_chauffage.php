@@ -71,10 +71,10 @@ $eq= eqLogic::byType('dom4_otg');
   </div>
   <div class="col-lg-6">
     <legend>Mise à jour:</legend>
-    <a class="btn btn-success btn-sm tooltips" id='bt_reload_cfg' title="{{Rechargement configuration de la centrale DOM2G, puis rechargement }}">{{Chargement Config. et Rechargement}}</a><br>
-    <a class="btn btn-success btn-sm tooltips" id='bt_reload' title="{{Rechargement depuis la centrale DOM2G}}">{{Rechargement}}</a><br>
-    <a class="btn btn-success btn-sm tooltips" id='bt_update' title="{{Mise à jour vers la centrale DOM2G}}">{{Mise à jour}}</a><br>
-    <a class="btn btn-success btn-sm tooltips" id='bt_update_save' title="{{Mise à jour vers la centrale DOM2G et enregistrement}}">{{Mise à jour et Sauvegarde}}</a><br>
+    <a class="btn btn-success btn-sm tooltips" id='bt_reload_cfg' title="{{Rechargement configuration de la centrale DOM4G, puis rechargement }}">{{Chargement Config. et Rechargement}}</a>
+    <a class="btn btn-success btn-sm tooltips" id='bt_reload' title="{{Rechargement depuis la centrale DOM4G}}">{{Rechargement}}</a>
+    <a class="btn btn-success btn-sm tooltips" id='bt_update' title="{{Mise à jour vers la centrale DOM4G}}">{{Mise à jour}}</a>
+    <a class="btn btn-success btn-sm tooltips" id='bt_update_save' title="{{Mise à jour vers la centrale DOM4G et enregistrement}}">{{Mise à jour et Sauvegarde}}</a><br>
   </div>
 
 <?php 

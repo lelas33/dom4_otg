@@ -27,6 +27,8 @@ function get_consignes_chauffage()
 {
   global $consigne_chauffage;
 
+  $eq = eqLogic::byType('dom4_otg');
+  
   // Capture des parametres depuis le module DOM2G
   // ---------------------------------------------
   // Creation d'une liaison TCP/IP avec le serveur vers la centrale DOM2G
@@ -46,6 +48,8 @@ function get_consignes_chauffage()
     for ($i=0; $i<NB_TAILLE_CONSIGNE; $i++) {
       $consigne_chauffage["jour"]["consigne"][$piece][$i] = $ack['param'][$offs++] + 256 * $ack['param'][$offs++];
     }
+    $nom_piece = $eq[0]->getConfiguration("nom_piece_".($piece+1));
+    $consigne_chauffage["nom_piece"][$piece] = $nom_piece;
   }
 
   // 2) envoi du message d'interrogation à DOM2 sur les consignes mode semaine
@@ -67,22 +71,22 @@ function get_consignes_chauffage()
   }
 
   // 3) envoi du message d'interrogation à DOM2 sur le statut complementaire
-  $msg['cmd'] = MCNT3_GETSTS;
+  $msg['cmd'] = MCHA_GET_STS;
   $msg['nbp'] = 0x00;
   $ack = array();
   // Envoi du message de commande
   dom2_message_send ($socket, $msg, $ack);
   
     // Mise en forme du résultat dans un tableau "PHP"
-  $consigne_chauffage["status"]["vac_jour"]     = $ack['param'][0x13];
-  $consigne_chauffage["status"]["vac_mois"]     = $ack['param'][0x14];
-  $consigne_chauffage["status"]["vac_annee"]    = $ack['param'][0x15];
-  $consigne_chauffage["status"]["vac_heure"]    = $ack['param'][0x16];
-  $consigne_chauffage["status"]["vac_min"]      = $ack['param'][0x17];
-  $consigne_chauffage["status"]["temp_inocc"]   = $ack['param'][0x18]/10.0;
-  $consigne_chauffage["status"]["temp_antigel"] = $ack['param'][0x19]/10.0;
-  $consigne_chauffage["status"]["epente_cdc"]   = $ack['param'][0x1A]/10.0;
-  $consigne_chauffage["status"]["ipente_cdc"]   = $ack['param'][0x1B]/10.0;
+  $consigne_chauffage["status"]["vac_jour"]     = $ack['param'][0x03];
+  $consigne_chauffage["status"]["vac_mois"]     = $ack['param'][0x04];
+  $consigne_chauffage["status"]["vac_annee"]    = $ack['param'][0x05];
+  $consigne_chauffage["status"]["vac_heure"]    = $ack['param'][0x06];
+  $consigne_chauffage["status"]["vac_min"]      = $ack['param'][0x07];
+  $consigne_chauffage["status"]["temp_inocc"]   = $ack['param'][0x08]/10.0;
+  $consigne_chauffage["status"]["temp_antigel"] = $ack['param'][0x09]/10.0;
+  $consigne_chauffage["status"]["epente_cdc"]   = $ack['param'][0x0A]/10.0;
+  $consigne_chauffage["status"]["ipente_cdc"]   = $ack['param'][0x0B]/10.0;
 
   // Fermeture du socket TCP/IP
   dom2_end_socket ($socket) ;
@@ -171,6 +175,8 @@ function stat_regulation_dom2g()
 {
   global $stat_regulation;
 
+  $eq = eqLogic::byType('dom4_otg');
+
   // Creation d'une liaison TCP/IP avec le serveur vers la centrale DOM2G
   $socket = dom2_start_socket ( "G" );
   
@@ -184,6 +190,7 @@ function stat_regulation_dom2g()
   // Fermeture du socket TCP/IP
   dom2_end_socket ($socket);
   
+
   // Mise en forme des resultats dans un tableau "PHP"
   $offs = 0;
   for ($piece=0; $piece<NB_PIECES; $piece++) {
@@ -193,6 +200,10 @@ function stat_regulation_dom2g()
     $tmp = $ack['param'][$offs++] + 256 * $ack['param'][$offs++]; if ($tmp & 0x8000) $tmp = (($tmp & 0x7fff) - 0x8000); $stat_regulation["ect_maxipos"][$piece] = $tmp/10.0;
     $tmp = $ack['param'][$offs++] + 256 * $ack['param'][$offs++]; if ($tmp & 0x8000) $tmp = (($tmp & 0x7fff) - 0x8000); $stat_regulation["ect_maxineg"][$piece] = $tmp/10.0;
     $tmp = $ack['param'][$offs++] + 256 * $ack['param'][$offs++]; if ($tmp & 0x8000) $tmp = (($tmp & 0x7fff) - 0x8000); $stat_regulation["ect_mean"][$piece]    = $tmp/10.0;
+    $nom_piece = $eq[0]->getConfiguration("nom_piece_".($piece+1));
+    $stat_regulation["nom_piece"][$piece] = $nom_piece;
+    $stat_regulation["piece_enable"][$piece] = $ack['param'][$offs++];
+    $offs++;
   }
   return;
 }
@@ -216,8 +227,8 @@ try {
 
   // Capture des consignes de temperatures de chauffage 
   if (init('action') == 'getConsignes') {
+    log::add('dom4_otg', 'info', 'get_consignes_chauffage - Ajax:');
     get_consignes_chauffage();
-    log::add('dom2otgv4', 'info', 'get_consignes_chauffage - Ajax:');
     $ret_json = json_encode ($consigne_chauffage);
     ajax::success($ret_json);
   }
@@ -225,37 +236,37 @@ try {
   // Capture des consignes de temperatures de chauffage 
   else if (init('action') == 'ReloadConfig') {
     reload_config_dom2g();
-    log::add('dom2otgv4', 'info', 'ReloadConfig - Ajax:');
+    log::add('dom4_otg', 'info', 'ReloadConfig - Ajax:');
     ajax::success();
   }
   // Mise à jour vers la centrale DOM2G
   else if (init('action') == 'UpdateConfig') {
     update_config_dom2g(init('param'));
-    log::add('dom2otgv4', 'info', 'UpdateConfig - Ajax:');
-    // log::add('dom2otgv4', 'info', 'param0:'.init('param')[0]);
-    // log::add('dom2otgv4', 'info', 'param1:'.init('param')[1]);
-    // log::add('dom2otgv4', 'info', 'param2:'.init('param')[2]);
-    // log::add('dom2otgv4', 'info', 'param3:'.init('param')[3]);
-    // log::add('dom2otgv4', 'info', 'param4:'.init('param')[4]);
-    // log::add('dom2otgv4', 'info', 'param5:'.init('param')[5]);
-    // log::add('dom2otgv4', 'info', 'param6:'.init('param')[6]);
-    // log::add('dom2otgv4', 'info', 'param7:'.init('param')[7]);
-    // log::add('dom2otgv4', 'info', 'param8:'.init('param')[8]);
+    log::add('dom4_otg', 'info', 'UpdateConfig - Ajax:');
+    // log::add('dom4_otg', 'info', 'param0:'.init('param')[0]);
+    // log::add('dom4_otg', 'info', 'param1:'.init('param')[1]);
+    // log::add('dom4_otg', 'info', 'param2:'.init('param')[2]);
+    // log::add('dom4_otg', 'info', 'param3:'.init('param')[3]);
+    // log::add('dom4_otg', 'info', 'param4:'.init('param')[4]);
+    // log::add('dom4_otg', 'info', 'param5:'.init('param')[5]);
+    // log::add('dom4_otg', 'info', 'param6:'.init('param')[6]);
+    // log::add('dom4_otg', 'info', 'param7:'.init('param')[7]);
+    // log::add('dom4_otg', 'info', 'param8:'.init('param')[8]);
     ajax::success();
   }
 
   // Sauvegarde de la configuration sur la centrale DOM2G
   else if (init('action') == 'SaveConfig') {
-    log::add('dom2otgv4', 'info', 'SaveConfig - Ajax:');
+    log::add('dom4_otg', 'info', 'SaveConfig - Ajax:');
     save_config_dom2g();
     ajax::success();
   }
 
   else if (init('action') == 'GetStatRegulation') {
-    log::add('dom2otgv4', 'info', 'stat_regulation_dom2g - Ajax:');
+    log::add('dom4_otg', 'info', 'stat_regulation_dom2g - Ajax:');
     stat_regulation_dom2g();
     $ret_json = json_encode ($stat_regulation);
-    log::add('dom2otgv4', 'info', 'stat_regulation_dom2g - Ajax:'.$ret_json);
+    log::add('dom4_otg', 'info', 'stat_regulation_dom2g - Ajax:'.$ret_json);
     ajax::success($ret_json);
   }
 

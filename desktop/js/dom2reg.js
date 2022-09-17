@@ -16,11 +16,13 @@
  */
 
 
-var NB_PIECE = 6;
+var NB_PIECE = 8;
 
 var stat_regulation    = [[]];
-var piece_name  = ["Chambre.P", "Chambre.E", "Chambre.B", "Séjour",  "Bureau",  "Chambre.I" ];
-var piece_color = ["#efce8f",   "#0080ff",   "#008000",   "#b49763", "#ff8000", "#d0d0d0" ];
+// var piece_name  = ["Chambre.P", "Chambre.E", "Chambre.B", "Séjour",  "Bureau",  "Chambre.I" ];
+var piece_name   = [];
+var piece_enable = [];
+var piece_color = ["#efce8f",   "#0080ff",   "#008000",   "#b49763", "#ff8000", "#d0d0d0", "#ff8000", "#d0d0d0" ];
 var sel_jour = 0;
 var jour_name = ["Lundi", "Mardi", "Mercredi", "Jeudi",   "Vendredi",  "Samedi", "Dimanche" ];
 
@@ -61,6 +63,8 @@ function GetStatRegulation() {
           stat_regulation[p][3] = stat_regul.ect_maxipos[p];
           stat_regulation[p][4] = stat_regul.ect_maxineg[p];
           stat_regulation[p][5] = stat_regul.ect_mean[p];
+          piece_name[p]         = stat_regul.nom_piece[p];
+          piece_enable[p]       = stat_regul.piece_enable[p];
         }
         display_stat();
       }
@@ -79,7 +83,7 @@ function display_stat() {
   buff += '<br><br><table width="60%" border="1" cellpadding="10">';
   // ligne entete
   buff += '<tr>';
-  buff += '<td width="10%" align="center" height=25 style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Pièce</strong></th>';
+  buff += '<td width="20%" align="center" height=25 style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Pièce</strong></th>';
   buff += '<td width="10%" align="center" style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Consigne</strong></th>';
   buff += '<td width="10%" align="center" style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Température</strong></th>';
   buff += '<td width="10%" align="center" style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Ecart courant</strong></th>';
@@ -90,7 +94,10 @@ function display_stat() {
   // contenu du tableau
   for (p=0;p<NB_PIECE;p++) {
     buff += '<tr>';
-    buff += '<td align="center" height=25><strong style="font-size:1.0em;color:'+piece_color[p]+'">'+piece_name[p]+'</strong></td>';
+    if (piece_enable[p] == 255)
+      buff += '<td align="center" height=25><strong style="font-size:1.0em;color:'+piece_color[p]+'"><s>'+piece_name[p]+'</s></strong></td>';
+    else
+      buff += '<td align="center" height=25><strong style="font-size:1.0em;color:'+piece_color[p]+'">'+piece_name[p]+'</strong></td>';
     if (stat_regulation[p][0] != 99) {
       buff += '<td align="center"><p style="color:grey;">'+stat_regulation[p][0]+'</p></td>';
       buff += '<td align="center"><p style="color:grey;">'+stat_regulation[p][1]+'</p></td>';
@@ -100,12 +107,12 @@ function display_stat() {
       buff += '<td align="center"><p style="color:grey;">'+stat_regulation[p][5]+'</p></td>';
     }
     else {
-      buff += '<td align="center">-</td>';
-      buff += '<td align="center">-</td>';
-      buff += '<td align="center">-</td>';
-      buff += '<td align="center">-</td>';
-      buff += '<td align="center">-</td>';
-      buff += '<td align="center">-</td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
+      buff += '<td align="center"><p style="color:grey;">--</p></td>';
     }
     buff += '</tr>';
   }

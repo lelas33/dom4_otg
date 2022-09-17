@@ -21,6 +21,13 @@ if (!isConnect('admin')) {
 }
 $eq= eqLogic::byType('dom4_otg');
 
+// Recupere le nom des pieces
+$nom_pieces = [];
+for ($i=0; $i<NB_PIECES; $i++) {
+  $nom_piece = $eq[0]->getConfiguration("nom_piece_".($i+1));
+  array_push($nom_pieces, $nom_piece);
+}
+
 foreach ($eq as $eqLogic) {
   /* Affiche image de la chaudiere */
   echo '<img src="plugins/dom4_otg/desktop/modal/chaudiere_vivadens_mcr_24.jpg" style="float:right;width:205px;height:321px;">';
@@ -69,7 +76,6 @@ foreach ($eq as $eqLogic) {
   $cmd = $eqLogic->getCmd(null, 'otg_40');   if (is_object($cmd)) $val7 = $cmd->getCache('value', '');  // Température pièce la plus froide
   $cmd = $eqLogic->getCmd(null, 'otg_41');   if (is_object($cmd)) $val8 = $cmd->getCache('value', '');  // Pièce la plus froide
   $cmd = $eqLogic->getCmd(null, 'otg_27');   if (is_object($cmd)) $val9 = $cmd->getCache('value', '');  // Outside temperature
-  $nom_piece = array("Chambre Parents", "Chambre Etienne", "Chambre Baptiste", "Cuisine / Séjour", "Bureau", "Reserve");
 
   echo '<strong style="font-size:1.2em;">';
   echo '<table width="60%" id="table_cmd">';
@@ -98,7 +104,7 @@ foreach ($eq as $eqLogic) {
       echo '<tr>';
         echo '<th align="center"><p style="color:grey;">Pièce la plus froide</p></th>';
         echo '<th align="center"><p style="color:grey;">'.$val7.' °C</p></th>';
-        echo '<th align="center"><p style="color:grey;">'.$nom_piece[$val8].'</p></th>';
+        echo '<th align="center"><p style="color:grey;">'.$nom_pieces[$val8].'</p></th>';
       echo '</tr>';
       echo '<tr>';
         echo '<th align="center"><p style="color:grey;">Température extérieure</p></th>';

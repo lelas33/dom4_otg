@@ -82,18 +82,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<!-- Paramètres généraux et spécifiques de l'équipement -->
 				<form class="form-horizontal">
 					<fieldset>
-						<div class="col-lg-6">
+						<div>
 							<legend><i class="fas fa-wrench"></i> {{Paramètres généraux}}</legend>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Nom de l'équipement}}</label>
-								<div class="col-sm-6">
+								<label class="col-lg-2 control-label">{{Nom de l'équipement}}</label>
+								<div class="col-lg-3">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display:none;">
 									<input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'équipement}}">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label" >{{Objet parent}}</label>
-								<div class="col-sm-6">
+								<label class="col-lg-2 control-label" >{{Objet parent}}</label>
+								<div class="col-lg-3">
 									<select id="sel_object" class="eqLogicAttr form-control" data-l1key="object_id">
 										<option value="">{{Aucun}}</option>
 										<?php
@@ -107,8 +107,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Catégorie}}</label>
-								<div class="col-sm-6">
+								<label class="col-lg-2 control-label">{{Catégorie}}</label>
+								<div class="col-lg-6">
 									<?php
 									foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
 										echo '<label class="checkbox-inline">';
@@ -119,59 +119,60 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Options}}</label>
-								<div class="col-sm-6">
+								<label class="col-lg-2 control-label">{{Options}}</label>
+								<div class="col-lg-3">
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked>{{Activer}}</label>
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
 								</div>
 							</div>
 
-							<legend><i class="fas fa-cogs"></i> {{Paramètres spécifiques}}</legend>
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Nom du paramètre n°1}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le paramètre n°1 de l'équipement}}"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="param1" placeholder="{{Paramètre n°1}}">
-								</div>
-							</div>
-							<div class="form-group">
-								<label class="col-sm-4 control-label"> {{Mot de passe}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Renseignez le mot de passe}}"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<input type="text" class="eqLogicAttr form-control inputPassword" data-l1key="configuration" data-l2key="password">
-								</div>
-							</div>
-							<!-- Exemple de champ de saisie du cron d'auto-actualisation avec assistant -->
-							<!-- La fonction cron de la classe du plugin doit contenir le code prévu pour que ce champ soit fonctionnel -->
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Auto-actualisation}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Fréquence de rafraîchissement des commandes infos de l'équipement}}"></i></sup>
-								</label>
-								<div class="col-sm-6">
-									<div class="input-group">
-										<input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="autorefresh" placeholder="{{Cliquer sur ? pour afficher l'assistant cron}}">
-										<span class="input-group-btn">
-											<a class="btn btn-default cursor jeeHelper roundedRight" data-helper="cron" title="Assistant cron">
-												<i class="fas fa-question-circle"></i>
-											</a>
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
+							<legend><i class="fas fa-cogs"></i> {{Nom des pièces chauffées et Température mesurées}}</legend>
+              <?php
+              for ($piece = 1; $piece <=8; $piece++) {
+                echo '<div class="form-group">';
+                echo '<label class="col-lg-2 control-label">{{Nom pièce n°'.$piece.'}}</label>';
+                echo '<div class="col-lg-3">';
+                echo '<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="nom_piece_'.$piece.'">';
+                echo '</div>';
+                echo '<label class="col-lg-2 control-label">{{Température pièce n°'.$piece.'}}</label>';
+                echo '<div class="col-lg-3">';
+                echo '<div class="input-group">';
+                echo '<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tempe_piece_'.$piece.'">';
+                echo '<span class="input-group-btn">';
+                echo '<a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>';
+                echo '</span>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+              }
+              ?>
 
-						<!-- Partie droite de l'onglet "Équipement" -->
-						<!-- Affiche un champ de commentaire par défaut mais vous pouvez y mettre ce que vous voulez -->
-						<div class="col-lg-6">
-							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
-							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Description}}</label>
-								<div class="col-sm-6">
-									<textarea class="form-control eqLogicAttr autogrow" data-l1key="comment"></textarea>
-								</div>
-							</div>
+							<legend><i class="fas fa-cogs"></i> {{Vannes de régulation par pièce}}</legend>
+              <?php
+              for ($piece = 1; $piece <=8; $piece++) {
+                echo '<div class="form-group">';
+                echo '<label class="col-lg-2 control-label">{{Commande consigne pièce n°'.$piece.'}}</label>';
+                echo '<div class="col-lg-3">';
+                echo '<div class="input-group">';
+                echo '<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="vanne_cmd_piece_'.$piece.'">';
+                echo '<span class="input-group-btn">';
+                echo '<a class="btn btn-default listCmdActionSlider roundedRight"><i class="fas fa-list-alt"></i></a>';
+                echo '</span>';
+                echo '</div>';
+                echo '</div>';
+                echo '<label class="col-lg-2 control-label">{{Info consigne pièce n°'.$piece.'}}</label>';
+                echo '<div class="col-lg-3">';
+                echo '<div class="input-group">';
+                echo '<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="vanne_info_piece_'.$piece.'">';
+                echo '<span class="input-group-btn">';
+                echo '<a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>';
+                echo '</span>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+              }
+              ?>
+
 						</div>
 					</fieldset>
 				</form>
