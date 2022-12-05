@@ -17,9 +17,12 @@
 require_once __DIR__  . '/../php/dom4_otg.inc.php';
 
 define('NB_TAILLE_CONSIGNE', 96);   // Nombre de consigne par jour (1 valeur par 1/4 heure)
+define("HEATING_HISTORY_FILE", "/../../data/otg_log.txt");
 
 global $consigne_chauffage;
 global $stat_regulation;
+global $heating_dt;
+
 // =================================================================================
 // Fonction de capture des tables de consignes de chauffage depuis la centrale DOM2G
 // =================================================================================
@@ -208,6 +211,192 @@ function stat_regulation_dom2g()
   return;
 }
 
+// =============================================================================
+// Fonction de capture de l'historique complet sur une periode de temps
+// Periode = 1,2,3,4 (Aujourdhui, hier, cette semaine, la semaine derniere)
+// Retour : histo tempe exterieure, histo conso ECS et chauffage
+// =============================================================================
+function get_heating_full_history($histo_range)
+{
+  // definition de la periode
+  if ($histo_range == 1) {       // aujourd'hui
+    $debut = date("Y-m-d", time());
+    $fin   = date("Y-m-d", time() + 24*3600);
+  }
+  else if ($histo_range == 2) {  // hier
+    $debut = date("Y-m-d", time() - 24*3600);
+    $fin   = date("Y-m-d", time());
+  }
+  else if ($histo_range == 3) {  // Cette semaine
+    $ts = time();
+    $jour_sem = date("N", $ts) - 1; // de 0(lun) a 6(dim)
+    $ts_deb = $ts - $jour_sem*24*3600;
+    $debut = date("Y-m-d", $ts_deb);
+    $fin   = date("Y-m-d", $ts_deb + 7*24*3600);
+  }
+  else if ($histo_range == 4) {  // la semaine derniere
+    $ts = time();
+    $jour_sem = date("N", $ts) - 1; // de 0(lun) a 6(dim)
+    $ts_deb = $ts - (7+$jour_sem)*24*3600;
+    $debut = date("Y-m-d", $ts_deb);
+    $fin   = date("Y-m-d", $ts_deb + 7*24*3600);
+  }
+  
+  log::add('dom4_otg', 'debug', 'Ajax:get_heating_full_history:debut='.$debut." / fin=".$fin);
+  $heating_histo = array();
+
+  $eqLogics = eqLogic::byType('dom4_otg');
+  $eqLogic = $eqLogics[0];
+  // Historique exterieure : => param "otg_27"
+  $tempe_cmd  = $eqLogic->getCmd(null, 'otg_27');
+  if (!is_object($tempe_cmd)) {
+    log::add('dom4_otg', 'error', "Ajax:get_heating_full_history: commande de temperature de l'air extérieur non valide");
+    return;
+  }
+  $cmdId = $tempe_cmd->getId();
+  $values = array();
+  $values = history::all($cmdId, $debut, $fin);
+  $idx = 0;
+  foreach ($values as $value) {
+    $heating_histo["te_ts"][$idx] = strtotime($value->getDatetime());
+    $heating_histo["te_va"][$idx] = round($value->getValue(),1);
+    $idx++;
+  }
+
+  // Historique conso ECS : => param "otg_cons_ecs_a"
+  $tempe_cmd  = $eqLogic->getCmd(null, 'otg_cons_ecs_a');
+  if (!is_object($tempe_cmd)) {
+    log::add('dom4_otg', 'error', "Ajax:get_heating_full_history: commande de conso ECS non valide");
+    return;
+  }
+  $cmdId = $tempe_cmd->getId();
+  $values = array();
+  $values = history::all($cmdId, $debut, $fin);
+  $idx = 0;
+  foreach ($values as $value) {
+    $heating_histo["ce_ts"][$idx] = strtotime($value->getDatetime());
+    $heating_histo["ce_va"][$idx] = round($value->getValue(),1);
+    $idx++;
+  }
+  // Historique conso ECS : => param "otg_cons_ch_a"
+  $tempe_cmd  = $eqLogic->getCmd(null, 'otg_cons_ch_a');
+  if (!is_object($tempe_cmd)) {
+    log::add('dom4_otg', 'error', "Ajax:get_heating_full_history: commande de conso chauffage non valide");
+    return;
+  }
+  $cmdId = $tempe_cmd->getId();
+  $values = array();
+  $values = history::all($cmdId, $debut, $fin);
+  $idx = 0;
+  foreach ($values as $value) {
+    $heating_histo["cc_ts"][$idx] = strtotime($value->getDatetime());
+    $heating_histo["cc_va"][$idx] = round($value->getValue(),1);
+    $idx++;
+  }
+
+  return($heating_histo);
+}
+
+// ===================================================================
+// Fonction de lecture de l'historique de fonctionnement du chauffage
+// ===================================================================
+function get_heating_history($ts_start, $ts_end)
+{
+  global $heating_dt;
+  
+  // ouverture du fichier de log: Historique piscine
+  $fn_heating = dirname(__FILE__).HEATING_HISTORY_FILE;
+  $fheating = fopen($fn_heating, "r");
+
+  // lecture des donnees
+  $line = 0;
+  $line_all = 0;  
+  $heating_dt["hist"] = [];
+  if ($fheating) {
+    while (($buffer = fgets($fheating, 4096)) !== false) {
+      // extrait les timestamps debut et fin du trajet
+      $tmp=explode(",", $buffer);
+      if (count($tmp) == 3) {
+        list($log_ts, $log_conso_heating, $log_conso_ecs) = $tmp;
+        $log_tsi = intval($log_ts);
+        // selectionne les trajets selon leur date depart&arrive
+        if (($log_tsi>=$ts_start) && ($log_tsi<$ts_end)) {
+          $heating_dt["hist"][$line] = $buffer;
+          $line = $line + 1;
+        }
+      }
+      else {
+        log::add('dom4_otg', 'error', 'Ajax:get_heating_history: Erreur dans le fichier otg_log.txt, à la ligne:'.$line_all);
+      }
+      $line_all = $line_all + 1;
+    }
+  }
+  fclose($fheating);
+  
+  log::add('dom4_otg', 'debug', 'Ajax:get_heating_history:nb_lines='.$line);
+  return;
+}
+
+// ===================================================================
+// Fonction de calcul des statistique de consommation du chauffage
+// ===================================================================
+function get_heating_stat()
+{
+  global $heating_dt;
+  // calcul des statistiques par mois
+  // --------------------------------
+  $heating_stat["ecs"] = [[]];
+  $heating_stat["cha"] = [[]];
+  $heating_stat["cur_month"] = [];   // stat mois en cours
+  $heating_stat["prev_month"] = [];  // stat mois precedent
+  for ($id=0; $id<=31; $id++) {
+    $heating_stat["cur_month"][$id] = 0;
+    $heating_stat["prev_month"][$id] = 0;
+  }
+  $cur_year   = intval(date('Y'));  // Annee courante
+  $cur_month  = intval(date('n'));  // Month courant
+  $prev_month = ($cur_month == 1) ? 12 : ($cur_month - 1); // Month precedent
+  log::add('dom4_otg', 'debug', 'Ajax:get_heating_stat:nb_lines='.count($heating_dt["hist"]));
+  for ($id=0; $id<count($heating_dt["hist"]); $id++) {
+    $tmp = explode(",", $heating_dt["hist"][$id]);
+    list($log_ts, $log_conso_heating, $log_conso_ecs) = $tmp;
+    $year  = intval(date('Y', $log_ts));  // Year => ex 2020
+    $month = intval(date('n', $log_ts));  // Month => 1-12
+    $day   = intval(date('j', $log_ts));  // Day => 1-31
+    if (isset($heating_stat["ecs"][$year][$month])){
+      $heating_stat["ecs"][$year][$month] += $log_conso_ecs;
+    }
+    else {
+      $heating_stat["ecs"][$year][$month] = $log_conso_ecs;
+    }
+    if (isset($heating_stat["cha"][$year][$month])){
+      $heating_stat["cha"][$year][$month] += $log_conso_heating;
+    }
+    else {
+      $heating_stat["cha"][$year][$month] = $log_conso_heating;
+    }
+    // stat du mois en court
+    if (($year == $cur_year) and ($month == $cur_month)) {
+      $heating_stat["cur_month"][$day] += ($log_conso_ecs + $log_conso_heating);
+    }
+    // stat du mois en precedent
+    if (($year == $cur_year) and ($month == $prev_month)) {
+      $heating_stat["prev_month"][$day] += ($log_conso_ecs + $log_conso_heating);
+    }
+      
+  }
+  // Ajoute quelques infos complémentaires pour utilisation par javascript
+  $eqLogics = eqLogic::byType('dom4_otg');
+  $eqLogic = $eqLogics[0];
+  // Ajoute quelques parametres de configuration
+  if ($eqLogic->getIsEnable()) {
+    // $heating_stat["cost_kwh"]  = floatval($eqLogic->getConfiguration("cost_kwh"));    // Cout kWh
+    $heating_stat["cost_kwh"]  = 0.0603 * 1.2;    // Cout kWh selon facture 07 - 10 / 2022
+  }
+  return($heating_stat);
+}
+
+
 // =====================================
 // Gestion des commandes recues par AJAX
 // =====================================
@@ -267,6 +456,21 @@ try {
     stat_regulation_dom2g();
     $ret_json = json_encode ($stat_regulation);
     log::add('dom4_otg', 'info', 'stat_regulation_dom2g - Ajax:'.$ret_json);
+    ajax::success($ret_json);
+  }
+  // Page Panel : Infos du moment
+  else if (init('action') == 'getHeatingFullHistory') {
+    $histo_range = init('range');
+    log::add('dom4_otg', 'info', "Ajax:getHeatingFullHistory pour la plage:".$histo_range);
+    $heating_histo = get_heating_full_history($histo_range);
+    $ret_json = json_encode ($heating_histo);
+    ajax::success($ret_json);
+  }
+  else if (init('action') == 'getHeatingStat') {
+    log::add('dom4_otg', 'info', 'Ajax:getHeatingStat');
+    get_heating_history(0, time());  // intervalle de l'origine des temps a maintenant
+    $heating_stat = get_heating_stat();
+    $ret_json = json_encode ($heating_stat);
     ajax::success($ret_json);
   }
 

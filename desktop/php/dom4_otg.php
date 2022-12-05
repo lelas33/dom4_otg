@@ -6,6 +6,7 @@ if (!isConnect('admin')) {
 $plugin = plugin::byId('dom4_otg');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
+$nb_pieces = 12;
 ?>
 
 <div class="row row-overflow">
@@ -128,7 +129,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Nom des pièces chauffées et Température mesurées}}</legend>
               <?php
-              for ($piece = 1; $piece <=8; $piece++) {
+              for ($piece = 1; $piece<=$nb_pieces; $piece++) {
                 echo '<div class="form-group">';
                 echo '<label class="col-lg-2 control-label">{{Nom pièce n°'.$piece.'}}</label>';
                 echo '<div class="col-lg-3">';
@@ -149,7 +150,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Vannes de régulation par pièce}}</legend>
               <?php
-              for ($piece = 1; $piece <=8; $piece++) {
+              for ($piece = 1; $piece<=$nb_pieces; $piece++) {
                 echo '<div class="form-group">';
                 echo '<label class="col-lg-2 control-label">{{Commande consigne pièce n°'.$piece.'}}</label>';
                 echo '<div class="col-lg-3">';

@@ -1,15 +1,6 @@
 {
 	"id" : "dom4_otg",
 	"name" : "Dom4 Passerelle Opentherm",
-	"specialAttributes" : {
-		"object" : {
-			"toto" : {"name" : {"fr_FR" : "Plop je suis un attribut spécial"},"type" : "input"},
-			"toto2" : {"name" : {"fr_FR" : "Plop je suis un attribut spécial number"},"type" : "number"}
-		},
-		"user" : {
-			"toto" : {"name" : {"fr_FR" : "Plop je suis un attribut spécial"},"type" : "select","values" : [{"value" : "1", "name" : "valeur 1"},{"value" : "plop", "name" : "valeur plop"}]}
-		}
-	},
 	"description" : {
 		"fr_FR": "Gestion passerelle opentherm"
 	},
@@ -17,6 +8,7 @@
 	"author" : "lelas33",
 	"require" : "4.0",
 	"category" : "energy",
+	"display" : "panel",
 	"hasDependency" : false,
 	"hasOwnDeamon" : false,
 	"maxDependancyInstallTime" : 0,

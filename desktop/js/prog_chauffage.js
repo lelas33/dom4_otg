@@ -16,15 +16,16 @@
  */
 
 
-var NB_PIECE = 8;
+var NB_PIECE = 12;
 var NB_TAILLE_CONSIGNE = 96;     // Nombre de point de consigne de température par jour ( 1 par 15 mn )
 
 var cons_chauffage_jour    = [[]];
 var cons_chauffage_jouren  = [];
 var cons_chauffage_hebdo   = [[[]]];
 var cons_chauffage_hebdoen = [[]];
-var temp_name  = [];
-var temp_color = ["#F09880",   "#FF1000",   "#0000FF",   "#CC00FF",  "#D06820", "#880088",  "#D06820", "#880088" ];
+var piece_name  = [];
+// var temp_color = ["#F09880",   "#FF1000",   "#0000FF",   "#CC00FF",  "#D06820", "#880088",  "#D06820", "#880088" ];
+var piece_color = [fn_color("burlywood"), fn_color("darkgoldenrod  "), fn_color("goldenrod"), fn_color("rosybrown"), fn_color("darkorange"), fn_color("dodgerblue"), fn_color("limegreen"), fn_color("gold"), fn_color("peru"), fn_color("darkgray"), fn_color("darkgray"), fn_color("darkgray") ];
 var sel_jour = 0;
 var jour_name = ["Lundi", "Mardi", "Mercredi", "Jeudi",   "Vendredi",  "Samedi", "Dimanche" ];
 
@@ -176,7 +177,8 @@ function getConsignes() {
         },
       dataType: 'json',
       error: function (request, status, error) {
-          handleAjaxError(request, status, error);
+        alert("getConsignes:Error"+status+"/"+error);
+        handleAjaxError(request, status, error);
       },
       success: function (data) {
         cons_chau = jQuery.parseJSON(data.result);
@@ -184,8 +186,8 @@ function getConsignes() {
         for (p=0;p<NB_PIECE;p++) {
           cons_chauffage_jour[p] = [];
           cons_chauffage_jouren[p] = cons_chau.jour.enabled[p];
-          temp_name[p] = cons_chau.nom_piece[p];
-          // console.log("[getConsignes] Piece : " + temp_name[p] + " / enabled = " + cons_chauffage_jouren[p]);
+          piece_name[p] = cons_chau.nom_piece[p];
+          // console.log("[getConsignes] Piece : " + piece_name[p] + " / enabled = " + cons_chauffage_jouren[p]);
           for (i=0;i<NB_TAILLE_CONSIGNE;i++) {
             cons_chauffage_jour[p].push ([i*15*60*1000, parseInt(cons_chau.jour.consigne[p][i],10)/10.0]);
           }
@@ -295,8 +297,8 @@ function dispay_consigne_jour() {
   for (i=0;i<NB_PIECE;i++) {
     Series[i] = {};
     Series[i].step = true;
-    Series[i].name = temp_name[i];
-    Series[i].color = temp_color[i];
+    Series[i].name = piece_name[i];
+    Series[i].color = piece_color[i];
     Series[i].data = cons_chauffage_jour[i];
     Series[i].type = 'line';
     Series[i].visible = (cons_chauffage_jouren[i] != 255) ? true:false;
@@ -311,8 +313,8 @@ function dispay_consigne_hebdo() {
   for (i=0;i<NB_PIECE;i++) {
     Series[i] = {};
     Series[i].step = true;
-    Series[i].name = temp_name[i];
-    Series[i].color = temp_color[i];
+    Series[i].name = piece_name[i];
+    Series[i].color = piece_color[i];
     Series[i].data = cons_chauffage_hebdo[sel_jour][i];
     Series[i].type = 'line';
     Series[i].visible = (cons_chauffage_jouren[i] != 255) ? true:false;
@@ -335,7 +337,7 @@ function dispay_enable_jour() {
       chkd = 'disabled="true"';
     else
       chkd = '';
-    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+temp_name[p]+'</s>' : temp_name[p];
+    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+piece_name[p]+'</s>' : piece_name[p];
     $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+nom_piece+'</th>');
     p = 2*i+1;
     if (cons_chauffage_jouren[p] == 1)
@@ -344,7 +346,7 @@ function dispay_enable_jour() {
       chkd = 'disabled="true"';
     else
       chkd = '';
-    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+temp_name[p]+'</s>' : temp_name[p];
+    nom_piece = (cons_chauffage_jouren[p] == 255) ? '<s>'+piece_name[p]+'</s>' : piece_name[p];
     $("#piecej_enable").append('<th width="15%" align="left"><input type="checkbox" name="jour_enp'+p+'" '+chkd+'>&nbsp'+nom_piece+'</th>');
     $("#piecej_enable").append('</tr>');
   }
@@ -390,3 +392,10 @@ function dispay_enable_jour() {
       }
     }).datepicker("setDate", "0");
   });
+
+// Misc
+function fn_color(str){
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = str;
+    return ctx.fillStyle;
+}

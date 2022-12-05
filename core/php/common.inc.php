@@ -50,9 +50,8 @@
 
 // Liste des capteurs de temperature pour DOM2G
 // ============================================
-  define('NB_PIECES',       8) ;            // Nombre de pieces chauffee et regulees
-  define('NB_TCAP',         8) ;            // Nombre de capteurs de temperature
-  define('TEMP_INVALIDE',   990) ;          // Temperature invalide
+  define('NB_PIECES',      12) ;            // Nombre de pieces chauffee et regulees (hypothese: 1 capteur temperature par piece)
+  define('TEMP_INVALIDE', 990) ;            // Temperature invalide
 
 // Liste des commandes des messages PC pour DOM2A
 // ==============================================

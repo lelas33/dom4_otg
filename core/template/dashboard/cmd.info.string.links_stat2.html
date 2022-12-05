@@ -1,0 +1,20 @@
+<div style="width:130px;" class="#history# tooltips cmd cmd-widget" data-type="info" data-subtype="string" data-cmd_id="#id#" title="#collectDate#" >
+  <div class="title #hide_name#">
+    <div class="cmdName">#name_display#</div>
+  </div>
+  <div style="min-height:8px;">
+  </div>
+  <div class="content-sm">
+    <span class="img_links_otg"><img src="plugins/dom4_otg/core/template/dashboard/img_links.png" width="120"/></span>
+  </div>
+  <script>
+    $('.content-sm .img_links_otg').on('click', function () {
+      console.log("dom4_otg : click");
+      var urlcourante = document.location.href;
+      urlcourante = urlcourante.replace(/\/$/, "");
+      index_end_root = urlcourante.lastIndexOf( "/" );
+      url_root = urlcourante.substring(0, index_end_root);
+      window.location = url_root+"/index.php?v=d&m=dom4_otg&p=panel";
+    });
+  </script>
+</div>

@@ -16,13 +16,14 @@
  */
 
 
-var NB_PIECE = 8;
+var NB_PIECE = 12;
+
 
 var stat_regulation    = [[]];
 // var piece_name  = ["Chambre.P", "Chambre.E", "Chambre.B", "Séjour",  "Bureau",  "Chambre.I" ];
 var piece_name   = [];
 var piece_enable = [];
-var piece_color = ["#efce8f",   "#0080ff",   "#008000",   "#b49763", "#ff8000", "#d0d0d0", "#ff8000", "#d0d0d0" ];
+var piece_color = [fn_color("burlywood"), fn_color("darkgoldenrod  "), fn_color("goldenrod"), fn_color("rosybrown"), fn_color("darkorange"), fn_color("dodgerblue"), fn_color("limegreen"), fn_color("gold"), fn_color("peru"), fn_color("darkgray"), fn_color("darkgray"), fn_color("darkgray") ];
 var sel_jour = 0;
 var jour_name = ["Lundi", "Mardi", "Mercredi", "Jeudi",   "Vendredi",  "Samedi", "Dimanche" ];
 
@@ -80,7 +81,9 @@ function display_stat() {
   buff += 'Statistiques de suivi de la régulation du chauffage par pièce';
   buff += '</strong></font>';
   // creation tableau
-  buff += '<br><br><table width="60%" border="1" cellpadding="10">';
+  buff += '<style> table.stat-table, .stat-table td { border: 1px solid cyan; border-collapse: collapse; } </style>';
+
+  buff += '<br><br><table width="60%" class="stat-table" cellpadding="10">';
   // ligne entete
   buff += '<tr>';
   buff += '<td width="20%" align="center" height=25 style="background-color:#606060"><strong style="font-size:1.2em;color:LightGray;">Pièce</strong></th>';
@@ -123,3 +126,9 @@ function display_stat() {
   
 }
 
+// Misc
+function fn_color(str){
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = str;
+    return ctx.fillStyle;
+}

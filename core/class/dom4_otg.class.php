@@ -19,6 +19,8 @@
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
 require_once __DIR__  . '/../php/dom4_otg.inc.php';
 
+define("OTG_LOG_FILE", "/../../data/otg_log.txt");
+
 class dom4_otg extends eqLogic {
   /*     * *************************Attributs****************************** */
 
@@ -138,6 +140,10 @@ class dom4_otg extends eqLogic {
         "otg_cs_room_6"   => array('Consigne pièce 6'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_cs_room_7"   => array('Consigne pièce 7'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_cs_room_8"   => array('Consigne pièce 8'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_9"   => array('Consigne pièce 9'                     , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_10"  => array('Consigne pièce 10'                    , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_11"  => array('Consigne pièce 11'                    , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cs_room_12"  => array('Consigne pièce 12'                    , 'info',  'numeric', "°C",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         
         //                          name                                    type      subtype,    unit  hist visible  generic_type      template_dashboard  template_mobile
         // Commandes : modes chauffage                                    
@@ -148,8 +154,10 @@ class dom4_otg extends eqLogic {
         "modec_hiverh"    => array('Hiver Hebdomadaire'                   , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
         "modec_hiverv"    => array('Hiver Vacances'                       , 'action', 'other',    "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
         // Commandes : Autres                                             
-        "set_cconfort"    => array('Réglage Consigne générale'            , 'action', 'slider',   "",   0,   1,       "GENERIC_ACTION", 'default',          'default'),
-        "modec_setmode"   => array('Choix mode chauffage'                 , 'action', 'message',  "",   0,   0,       "GENERIC_ACTION", 'default',          'default') 
+        "set_cconfort"    => array('Réglage Consigne générale'            , 'action', 'slider',   "",   0,   1,       "GENERIC_ACTION", 'customtemp::curseur_thermostat', 'customtemp::curseur_thermostat'),
+        "modec_setmode"   => array('Choix mode chauffage'                 , 'action', 'message',  "",   0,   0,       "GENERIC_ACTION", 'default',          'default'), 
+        // Autres Infos
+        "misc_links"      => array('Liens widgets'                        , 'info',   'string',    "",  0,   1,       "GENERIC_INFO",   'core::badge',      'core::badge')
       );
     }
 
@@ -265,14 +273,17 @@ class dom4_otg extends eqLogic {
 // ================================================================================
 public function getInfos() {
   
-  $nom_piece = array("Chambre_P", "Chambre_E", "Chambre_B", "Sejour", "Bureau", "Chambre_I");
+  // Heure courante
+  $minute = intval(date("i"));
+  $heure  = intval(date("G"));
+  $cur_hm = intval($heure*60)+intval($minute);
 
   // Capture des parametres depuis le module DOM2G
   // ---------------------------------------------
-  // Creation d'une liaison TCP/IP avec le serveur vers la centrale DOM2G
+  // Creation d'une liaison TCP/IP avec le serveur vers le module RPI_BACKUP
   $socket = dom2_start_socket ( "G" );
   
-  // 1) envoi du message d'interrogation à DOM2G sur les info generales
+  // 1) envoi du message d'interrogation à RPI_BACKUP sur les info generales
   $msg['cmd'] = MCHA_GET_STS ;
   $msg['nbp'] = 0x00 ;
   $ack = array();
@@ -282,11 +293,11 @@ public function getInfos() {
   $cconfort      = (($ack['param'][0x2] - 128) + 200)/10;  // Consigne generale centree sur 20 deg
   log::add('dom4_otg','debug','getInfos:current_modec='.$current_modec.' / cconfort='.$cconfort);
 
-  // 2) envoi du message de definition de temperature courante par piece
+  // 2) envoi du message de definition de temperature courante par piece à RPI_BACKUP
   $msg['cmd'] = MCHA_PUSH_TEMPE ;
-  $msg['nbp'] = NB_TCAP*2 ;
+  $msg['nbp'] = NB_PIECES*2 ;
   $buf_tempe = '( ';
-  for ($i=0; $i<NB_TCAP; $i++) {
+  for ($i=0; $i<NB_PIECES; $i++) {
     $tempe = TEMP_INVALIDE;
     // Recuperation de la commande d'acces au capteur de temperature d'apres la page de configuration de l'equipement
     $temp_cmd_id = str_replace('#', '', $this->getConfiguration("tempe_piece_".($i+1)));
@@ -301,13 +312,13 @@ public function getInfos() {
     $msg['param'][2*$i+1] = ($tempe >>8)& 0xff;
   }
   $buf_tempe = $buf_tempe.')';
-  log::add('dom4_otg','debug','getInfos:tempe('.NB_TCAP.') = '.$buf_tempe);
+  log::add('dom4_otg','debug','getInfos:tempe('.NB_PIECES.') = '.$buf_tempe);
 
   $ack = array();
   // Envoi du message de commande
   dom2_message_send ($socket, $msg, $ack);
 
-  // 3)  envoi du message d'interrogation à DOM2G sur les parametres Opentherm
+  // 3)  envoi du message d'interrogation à RPI_BACKUP sur les parametres Opentherm
   $msg['cmd'] = MCHA_GET_OT ;
   $msg['nbp'] = 0x00 ;
   // Envoi du message de commande
@@ -321,7 +332,7 @@ public function getInfos() {
     $param_ot["value"][$i]   = $ack['param'][4*$i+3] * 256 + $ack['param'][4*$i+2];
     }
 
-  // 4) envoi du message d'interrogation à DOM2G sur les statistiques chauffage
+  // 4) envoi du message d'interrogation à RPI_BACKUP sur les statistiques chauffage
   $msg['cmd'] = MCHA_GET_STAT;
   $msg['nbp'] = 0x00 ;
 
@@ -334,7 +345,7 @@ public function getInfos() {
   $stat_conso_chaudiere["puiss_chau"]      = ($ack['param'][11] <<24) + ($ack['param'][10] <<16) + ($ack['param'][ 9] <<8) + $ack['param'][ 8];
   $stat_conso_chaudiere["puiss_dhw"]       = ($ack['param'][15] <<24) + ($ack['param'][14] <<16) + ($ack['param'][13] <<8) + $ack['param'][12];
 
-  // 5) envoi du message d'interrogation à DOM2G sur les consignes courantes par piece (stat regulation)
+  // 5) envoi du message d'interrogation à RPI_BACKUP sur les consignes courantes par piece (stat regulation)
   $msg['cmd'] = MCHA_STAT_REG;
   $msg['nbp'] = 0x00 ;
 
@@ -344,7 +355,7 @@ public function getInfos() {
   // Mise en forme du résultat dans un tableau "PHP"
   $offs = 2;
   for ($piece=0; $piece<NB_PIECES; $piece++) {
-    $tmp = $ack['param'][$offs++] + 256 * $ack['param'][$offs++];
+    $tmp = $ack['param'][$offs] + 256 * $ack['param'][$offs+1];
     if ($tmp & 0x8000) $tmp = (($tmp & 0x7fff) - 0x8000);
     $stat_regulation["reg_consi"][$piece] = $tmp/10.0;
     $offs+=14;
@@ -427,38 +438,68 @@ public function getInfos() {
   }
 
   // recopie des statistiques chauffage dans les objets cmd (memorisation en kWh => Convertion W.s => kW.h)
+  $stat_conso_ch = round($stat_conso_chaudiere["stat_conso_chau"]/(1000.0*3600.0),2);
   $cmd = $this->getCmd(null, 'otg_cons_ch_a');
   if (is_object($cmd)) {
     $cmd->setCollectDate('');
-    $cmd->event(round($stat_conso_chaudiere["stat_conso_chau"]/(1000.0*3600.0),2));
+    $cmd->event($stat_conso_ch);
   }
+  $stat_conso_ecs = round($stat_conso_chaudiere["stat_conso_dhw"]/(1000.0*3600.0),2);
   $cmd = $this->getCmd(null, 'otg_cons_ecs_a');
   if (is_object($cmd)) {
     $cmd->setCollectDate('');
-    $cmd->event(round($stat_conso_chaudiere["stat_conso_dhw"]/(1000.0*3600.0),2));
+    $cmd->event($stat_conso_ecs);
   }
   
   // puissance courante Chauffage et ECS
+  $puiss_ch = round($stat_conso_chaudiere["puiss_chau"]/1000.0,2);
   $cmd = $this->getCmd(null, 'otg_puiss_ch');
   if (is_object($cmd)) {
     $cmd->setCollectDate('');
-    $cmd->event(round($stat_conso_chaudiere["puiss_chau"]/1000.0,2));
+    $cmd->event($puiss_ch);
   }
+  $puiss_ecs = round($stat_conso_chaudiere["puiss_dhw"]/1000.0,2);
   $cmd = $this->getCmd(null, 'otg_puiss_ecs');
   if (is_object($cmd)) {
     $cmd->setCollectDate('');
-    $cmd->event(round($stat_conso_chaudiere["puiss_dhw"]/1000.0,2));
+    $cmd->event($puiss_ecs);
+  }
+  // A (minuit - 1 mn), enregitrement de ces stats dans un fichier BDD
+  if ($cur_hm == 1439) { // 1439
+    $date_str = mktime(0, 0, 0, date("m"), date("d"), date("Y"));  // Timestamp du debut de la journee
+    $log_fn = dirname(__FILE__).OTG_LOG_FILE;
+    $otg_log = $date_str.",".$stat_conso_ch.",".$stat_conso_ecs."\n";
+    file_put_contents($log_fn, $otg_log, FILE_APPEND | LOCK_EX);
   }
 
   // recopie des consignes courantes dans les objets cmd
   for ($piece=0; $piece<NB_PIECES; $piece++) {
-    $cmd = $this->getCmd(null, 'otg_cs_room_'.$piece);
+    $cmd = $this->getCmd(null, 'otg_cs_room_'.($piece+1));
     if (is_object($cmd)) {
+      $prev_consigne = $cmd->execCmd();    // Get current value
       $cmd->setCollectDate('');
       $cmd->event($stat_regulation["reg_consi"][$piece]);
     }
+
     // Mise a jour consigne Vanne radiateur si besoin
+    // -- Recuperation de la commande de consigne de la vanne associee a la piece, si elle existe. (d'apres la page de configuration de l'equipement)
+    $temp_cmd_id = str_replace('#', '', $this->getConfiguration("vanne_cmd_piece_".($piece+1)));
+    // log::add('dom4_otg','debug','getInfos:vanne_cmd_piece_('.$piece.') = '.$temp_cmd_id);
+    $temp_cmd = cmd::byId($temp_cmd_id);
+    // -- Si une vanne est bien associee a la piece => programmation de la consigne
+    if (($temp_cmd_id != "") and (is_object($temp_cmd))) {
+      $new_consigne = $stat_regulation["reg_consi"][$piece];
+      //$prev_consigne = $temp_cmd->execCmd();    // Get current value
+      log::add('dom4_otg','debug','getInfos:Une vanne est associée à la pièce:('.$piece.') => Prev consigne='.$prev_consigne.' / New consigne='.$new_consigne);
+      if ($new_consigne != $prev_consigne) {
+        log::add('dom4_otg','debug','getInfos: Changement de consigne => '.$new_consigne);
+        $option['slider'] = $new_consigne;
+        $temp_cmd->execute($option);
+      }
+    }
+
     /*
+    // $nom_piece = array("Chambre_P", "Chambre_E", "Chambre_B", "Sejour", "Bureau", "Chambre_I");
     $exp_name = "Vanne_".$nom_piece[$piece];
     foreach (eqLogic::byType('openzwave') as $zw_device) {
       if (($zw_device->getIsEnable() == 1) && ($zw_device->getName() == $exp_name)) {
@@ -525,7 +566,7 @@ public function getInfos() {
 }
 
 // ================================================================================
-// Fonction d'execution des commandes de la centrale dom2g (chauffage)
+// Fonction d'execution des commandes de la centrale RPI_BACKUP (chauffage)
 // ================================================================================
 //  param : 'Chauffage'
 //       10: Mode Chauffage : thermostat origine
@@ -540,7 +581,7 @@ public function dom2g_cmd_chau($command, $parametre) {
 
   log::add('dom4_otg', 'info', 'dom2g_cmd_chau:'.$command.', parametre='.$parametre);
 
-  // Creation d'une liaison TCP/IP avec le serveur vers la centrale DOM2G
+  // Creation d'une liaison TCP/IP avec le serveur vers la centrale RPI_BACKUP
   $socket = dom2_start_socket ("G");
 
   // Commande de definition du mode de chauffage
