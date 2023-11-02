@@ -120,6 +120,7 @@ class dom4_otg extends eqLogic {
         "otg_0_5"         => array('DHW Enable'                           , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_cons_ch_a"   => array('Consommation chauffage jour'          , 'info',  'numeric',"kWh",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_cons_ecs_a"  => array('Consommation ECS jour'                , 'info',  'numeric',"kWh",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
+        "otg_cons_elec"   => array('Consommation Electrique jour'         , 'info',  'numeric',"kWh",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_puiss_ch"    => array('Puissance chauffage'                  , 'info',  'numeric',  "W",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_puiss_ecs"   => array('Puissance ECS'                        , 'info',  'numeric',  "W",   1,   1,       "GENERIC_INFO", 'core::badge',      'core::badge'),
         "otg_modec_value" => array('Mode chauffage'                       , 'info',  'numeric',   "",   1,   0,       "GENERIC_INFO", 'core::badge',      'core::badge'),
@@ -451,6 +452,30 @@ public function getInfos() {
     $cmd->event($stat_conso_ecs);
   }
   
+  // Enregistrement dans le fichier log de la consommation électrique, pour les statistiques
+  // => Recuperation de la commande d'acces a la conso electrique
+  $temp_cmd_id = str_replace('#', '', $this->getConfiguration("conso_elec"));
+  $temp_cmd = cmd::byId($temp_cmd_id);
+  if (($temp_cmd_id != "") and (is_object($temp_cmd))) {
+    $cptelec_value = floatval($temp_cmd->execCmd());
+  }
+  $cmd = $this->getCmd(null, 'otg_cons_elec');
+  if (is_object($cmd)) {
+    // Si pas de contexte (valeur courante compteur) => On affecte la valeur courante du coompteur dans ce contexte
+    // Sinon, la conso prend la valeur courante du compteur moins la valeur precedente
+    $prev_compteur = $cmd->getConfiguration('last_compteur');
+    if (($prev_compteur == "0") or ($prev_compteur == "")) {
+      $conso_elec = 0;
+      $cmd->setConfiguration ('last_compteur', $cptelec_value);
+      $cmd->save();
+    }
+    else {
+      $conso_elec = $cptelec_value - floatval($prev_compteur);
+    }
+    $cmd->setCollectDate('');
+    $cmd->event($conso_elec);
+  }
+  
   // puissance courante Chauffage et ECS
   $puiss_ch = round($stat_conso_chaudiere["puiss_chau"]/1000.0,2);
   $cmd = $this->getCmd(null, 'otg_puiss_ch');
@@ -466,9 +491,15 @@ public function getInfos() {
   }
   // A (minuit - 1 mn), enregitrement de ces stats dans un fichier BDD
   if ($cur_hm == 1439) { // 1439
+    // Reset du compteur de consommation electrique journalier
+    $cmd = $this->getCmd(null, 'otg_cons_elec');
+    if (is_object($cmd)) {
+      $cmd->setConfiguration ('last_compteur', 0);
+      $cmd->save();
+    }
     $date_str = mktime(0, 0, 0, date("m"), date("d"), date("Y"));  // Timestamp du debut de la journee
     $log_fn = dirname(__FILE__).OTG_LOG_FILE;
-    $otg_log = $date_str.",".$stat_conso_ch.",".$stat_conso_ecs."\n";
+    $otg_log = $date_str.",".$stat_conso_ch.",".$stat_conso_ecs.",".$conso_elec."\n";
     file_put_contents($log_fn, $otg_log, FILE_APPEND | LOCK_EX);
   }
 

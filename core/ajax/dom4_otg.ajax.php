@@ -278,7 +278,7 @@ function get_heating_full_history($histo_range)
     $heating_histo["ce_va"][$idx] = round($value->getValue(),1);
     $idx++;
   }
-  // Historique conso ECS : => param "otg_cons_ch_a"
+  // Historique conso chauffage : => param "otg_cons_ch_a"
   $tempe_cmd  = $eqLogic->getCmd(null, 'otg_cons_ch_a');
   if (!is_object($tempe_cmd)) {
     log::add('dom4_otg', 'error', "Ajax:get_heating_full_history: commande de conso chauffage non valide");
@@ -291,6 +291,22 @@ function get_heating_full_history($histo_range)
   foreach ($values as $value) {
     $heating_histo["cc_ts"][$idx] = strtotime($value->getDatetime());
     $heating_histo["cc_va"][$idx] = round($value->getValue(),1);
+    $idx++;
+  }
+
+  // Historique conso elec : => param "otg_cons_elec"
+  $tempe_cmd  = $eqLogic->getCmd(null, 'otg_cons_elec');
+  if (!is_object($tempe_cmd)) {
+    log::add('dom4_otg', 'error', "Ajax:get_heating_full_history: commande de conso électrique non valide");
+    return;
+  }
+  $cmdId = $tempe_cmd->getId();
+  $values = array();
+  $values = history::all($cmdId, $debut, $fin);
+  $idx = 0;
+  foreach ($values as $value) {
+    $heating_histo["cel_ts"][$idx] = strtotime($value->getDatetime());
+    $heating_histo["cel_va"][$idx] = round($value->getValue(),1);
     $idx++;
   }
 
@@ -316,10 +332,10 @@ function get_heating_history($ts_start, $ts_end)
     while (($buffer = fgets($fheating, 4096)) !== false) {
       // extrait les timestamps debut et fin du trajet
       $tmp=explode(",", $buffer);
-      if (count($tmp) == 3) {
-        list($log_ts, $log_conso_heating, $log_conso_ecs) = $tmp;
+      if (count($tmp) == 4) {
+        list($log_ts, $log_conso_heating, $log_conso_ecs, $log_conso_elec) = $tmp;
         $log_tsi = intval($log_ts);
-        // selectionne les trajets selon leur date depart&arrive
+        // selectionne les infos selon leur date
         if (($log_tsi>=$ts_start) && ($log_tsi<$ts_end)) {
           $heating_dt["hist"][$line] = $buffer;
           $line = $line + 1;
@@ -347,11 +363,16 @@ function get_heating_stat()
   // --------------------------------
   $heating_stat["ecs"] = [[]];
   $heating_stat["cha"] = [[]];
-  $heating_stat["cur_month"] = [];   // stat mois en cours
-  $heating_stat["prev_month"] = [];  // stat mois precedent
+  $heating_stat["ele"] = [[]];
+  $heating_stat["cur_month"] = [];      // stat mois en cours (gaz)
+  $heating_stat["prev_month"] = [];     // stat mois precedent(gaz)
+  $heating_stat["cur_month_el"] = [];   // stat mois en cours (elec)
+  $heating_stat["prev_month_el"] = [];  // stat mois precedent(elec)
   for ($id=0; $id<=31; $id++) {
     $heating_stat["cur_month"][$id] = 0;
     $heating_stat["prev_month"][$id] = 0;
+    $heating_stat["cur_month_el"][$id] = 0;
+    $heating_stat["prev_month_el"][$id] = 0;
   }
   $cur_year   = intval(date('Y'));  // Annee courante
   $cur_month  = intval(date('n'));  // Month courant
@@ -359,7 +380,7 @@ function get_heating_stat()
   log::add('dom4_otg', 'debug', 'Ajax:get_heating_stat:nb_lines='.count($heating_dt["hist"]));
   for ($id=0; $id<count($heating_dt["hist"]); $id++) {
     $tmp = explode(",", $heating_dt["hist"][$id]);
-    list($log_ts, $log_conso_heating, $log_conso_ecs) = $tmp;
+    list($log_ts, $log_conso_heating, $log_conso_ecs, $log_conso_elec) = $tmp;
     $year  = intval(date('Y', $log_ts));  // Year => ex 2020
     $month = intval(date('n', $log_ts));  // Month => 1-12
     $day   = intval(date('j', $log_ts));  // Day => 1-31
@@ -375,13 +396,21 @@ function get_heating_stat()
     else {
       $heating_stat["cha"][$year][$month] = $log_conso_heating;
     }
+    if (isset($heating_stat["ele"][$year][$month])){
+      $heating_stat["ele"][$year][$month] += $log_conso_elec;
+    }
+    else {
+      $heating_stat["ele"][$year][$month] = $log_conso_elec;
+    }
     // stat du mois en court
     if (($year == $cur_year) and ($month == $cur_month)) {
       $heating_stat["cur_month"][$day] += ($log_conso_ecs + $log_conso_heating);
+      $heating_stat["cur_month_el"][$day] += $log_conso_elec;
     }
     // stat du mois en precedent
-    if (($year == $cur_year) and ($month == $prev_month)) {
+    if ((($year == $cur_year) and ($month == $prev_month)) or (($year == $cur_year-1) and ($month == 12))) {
       $heating_stat["prev_month"][$day] += ($log_conso_ecs + $log_conso_heating);
+      $heating_stat["prev_month_el"][$day] += $log_conso_elec;
     }
       
   }

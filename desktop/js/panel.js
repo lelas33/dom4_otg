@@ -188,16 +188,28 @@ function display_histo(histo_data) {
       color: "Red",
       data: []
     };
+  var cel_serie =  {
+      name: "Conso. Electricité",
+      step: 'left', // or 'center' or 'right'
+      color: "Blue",
+      data: []
+    };
   if (histo_data.ce_ts) {
-    console.log("Nb points fs_serie:"+histo_data.ce_ts.length);
+    console.log("Nb points ce_serie:"+histo_data.ce_ts.length);
     for (idx=0; idx<histo_data.ce_ts.length; idx++) {
-      ce_serie.data.push([parseInt(histo_data.ce_ts[idx])*1000, 5.0+parseFloat(histo_data.ce_va[idx])]);
+      ce_serie.data.push([parseInt(histo_data.ce_ts[idx])*1000, parseFloat(histo_data.ce_va[idx])]);
     }
   }
   if (histo_data.cc_ts) {
-    console.log("Nb points ss_serie:"+histo_data.cc_ts.length);
+    console.log("Nb points cc_serie:"+histo_data.cc_ts.length);
     for (idx=0; idx<histo_data.cc_ts.length; idx++) {
-      cc_serie.data.push([parseInt(histo_data.cc_ts[idx])*1000, 3.5+parseFloat(histo_data.cc_va[idx])]);
+      cc_serie.data.push([parseInt(histo_data.cc_ts[idx])*1000, parseFloat(histo_data.cc_va[idx])]);
+    }
+  }
+  if (histo_data.cel_ts) {
+    console.log("Nb points cel_serie:"+histo_data.cel_ts.length);
+    for (idx=0; idx<histo_data.cel_ts.length; idx++) {
+      cel_serie.data.push([parseInt(histo_data.cel_ts[idx])*1000, parseFloat(histo_data.cel_va[idx])]);
     }
   }
 
@@ -246,8 +258,8 @@ function display_histo(histo_data) {
       series: [te_serie]
   });
 
-  // Temperature filtration / Sel / PAC / Eclairage
-  Highcharts.chart('div_graph_info_filt', {
+  // Consommation Gaz chauffage, Gaz ECS, Electricite
+  Highcharts.chart('div_graph_info_conso', {
       chart: {
           plotBackgroundColor:'#808080',
           type: 'line'
@@ -283,14 +295,14 @@ function display_histo(histo_data) {
           }
         }
       },
-      series: [ce_serie, cc_serie]
+      series: [ce_serie, cc_serie, cel_serie]
   });
 
 }
 
-// =========================================================================
-//     Gestion des statistiques des infos de consommation du chauffage + ECS 
-// =========================================================================
+// =================================================================================
+//     Gestion des statistiques des infos de consommation du chauffage + ECS + Elec
+// =================================================================================
 
 // capturer les donnees depuis le serveur sur la totalite de l'historique
 // ======================================================================
@@ -328,10 +340,11 @@ function heating_stats(stat_data) {
 
   // recuperation des infos de configuration
   var cfg_cost_kwh = stat_data.cost_kwh;
-  var cfg_conso_ecs = stat_data.ecs;
-  var cfg_conso_cha = stat_data.cha;
+  // var cfg_conso_ecs = stat_data.ecs;
+  // var cfg_conso_cha = stat_data.cha;
+  // var cfg_conso_ele = stat_data.ele;
 
-  // mise en forme des donnnes annuelles
+  // mise en forme des donnnes annuelles: GAZ
   var sum_duree = [];
   var dt_ecs = [[]];
   var dt_cha = [[]];
@@ -372,8 +385,26 @@ function heating_stats(stat_data) {
   // dt_ecs[2023] = dt_ecs[2022];
   // dt_cha[2023] = dt_cha[2022];
   // sum_duree[2023] = sum_duree[2022];
+
+  // mise en forme des donnnes annuelles: ELEC
+  var sum_duree_el = [];
+  var dt_elec = [[]];
+  for (y=2022; y<2040; y++) {
+    sum_duree_el[y] = 0;
+    dt_elec[y] = [];
+    for (m=1; m<=12; m++) {
+      dt_elec[y][m-1] = 0;
+      if (stat_data.ele[y] != null)
+        if (stat_data.ele[y][m] != null)
+          dt_elec[y][m-1] = Math.round(stat_data.ele[y][m]);
+        else
+          dt_elec[y][m-1] = 0;
+      // somme duree Elec
+      sum_duree_el[y] += dt_elec[y][m-1];
+    }
+  }
   
-  // mise en forme des donnnes des mois precedent et courant
+  // mise en forme des donnnes des mois precedent et courant:GAZ
   var det_tot_series_previous = {
     name: "Mois précédent",
     color: ECS_COLOR_NAMES[0],
@@ -386,6 +417,17 @@ function heating_stats(stat_data) {
   };
   console.log("det_tot_series_previous:"+det_tot_series_previous.data);
   console.log("det_tot_series_current:"+det_tot_series_current.data);
+  // mise en forme des donnnes des mois precedent et courant:ELEC
+  var det_tot_series_previous_el = {
+    name: "Mois précédent",
+    color: ECS_COLOR_NAMES[0],
+    data: stat_data.prev_month_el
+  };
+  var det_tot_series_current_el = {
+    name: "Mois courant",
+    color: ECS_COLOR_NAMES[1],
+    data: stat_data.cur_month_el
+  };
 
   // mise au format attendu par highcharts
   tot_series = [];
@@ -405,6 +447,18 @@ function heating_stats(stat_data) {
     if (sum_duree[y] != 0) {
       tot_series.push(serie_ecs);
       tot_series.push(serie_cha);
+    }
+  }
+  tot_series_el = [];
+  for (y=2022; y<2040; y++) {
+    var serie_ele = {
+      name: 'Elec:'+y,
+      color: ECS_COLOR_NAMES[y-2022],
+      data: dt_elec[y],
+      stack: y
+    };
+    if (sum_duree_el[y] != 0) {
+      tot_series_el.push(serie_ele);
     }
   }
   // console.log("pmp_series:"+dt_pmp);
@@ -480,6 +534,79 @@ function heating_stats(stat_data) {
           }
       },
       series: [det_tot_series_previous, det_tot_series_current]
+  });
+
+  // Consommation totale electrique
+  Highcharts.chart('div_graph_stat_totale', {
+      chart: {
+          plotBackgroundColor:'#808080',
+          type: 'column'
+      },
+      title: {
+          text: ''
+      },
+      xAxis: {
+          title: {
+              text: 'Mois'
+          },
+          categories: ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec']
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: 'Consom. (kWh) / Coût (€)'
+          }
+      },
+      tooltip: {
+          headerFormat: '<b>{point.x}</b><br/>',
+          pointFormat: '{series.name}: {point.y} kW/h<br/>Total: {point.stackTotal} kW/h'
+      },
+      plotOptions: {
+          column: {
+              stacking: 'normal'
+              }
+      },
+      series: tot_series_el
+  });
+  
+  // Consommation totale electrique detaille par jour du mois en cours et du mois precedent
+  Highcharts.chart('div_graph_detstat_totale', {
+      chart: {
+          plotBackgroundColor:'#808080',
+          type: 'column'
+      },
+      title: {
+          text: ''
+      },
+      xAxis: {
+          title: {
+              text: 'Jour'
+          },
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: 'Consom. (kWh) / Coût (€)'
+          }
+      },
+      // plotOptions: {
+          // series: {
+              // pointStart: Date.UTC(2022, 6, 1),
+              // pointIntervalUnit: 'day'
+          // }
+      // },
+      tooltip: {
+          shared: true,
+          useHTML: true,
+          formatter: function () {
+              return this.points.reduce(function (s, point) {
+                  var hdr  = '<br/><span style="color:'+ point.series.color +';font-size:14px"><b>' + point.series.name + ': </b></span>';
+                  var data = '<span style="font-size:14px">'+Math.round(point.y * 10) / 10 + ' kWh / ' + Math.round(10*point.y*cfg_cost_kwh)/10 + ' €</span>';
+                  return (s + hdr + data);
+              }, '<span style="font-size:16px"><b>'+this.x+'</b></span>');
+          }
+      },
+      series: [det_tot_series_previous_el, det_tot_series_current_el]
   });
 
 }

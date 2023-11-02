@@ -73,9 +73,10 @@ $eqLogics = eqLogic::byType('dom4_otg');
                    <div style="min-height: 30px;">
                      <img src="plugins/dom4_otg/desktop/php/eau-chaude.jpg"; width="150" />
                      <img src="plugins/dom4_otg/desktop/php/radiateur.jpg"; width="150" />
-                     <i style="font-size: 1.5em;">{{Consommation Eau Chaude Sanitaire / Chauffage}}</i>
+                     <img src="plugins/dom4_otg/desktop/php/elec.jpg"; width="150" />
+                     <i style="font-size: 1.5em;">{{Consommation Eau Chaude Sanitaire / Chauffage / Electricité}}</i>
                    </div>
-                   <div id='div_graph_info_filt' style="font-size: 1.2em;"></div>
+                   <div id='div_graph_info_conso' style="font-size: 1.2em;"></div>
                 </fieldset>
                 <div style="min-height: 10px;"></div>
               </form>
@@ -106,6 +107,21 @@ $eqLogics = eqLogic::byType('dom4_otg');
                          <div id='div_graph_detstat_total' style="font-size: 1.2em;"></div>
                      </fieldset>
                      <div style="min-height: 10px;"></div>
+                     <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 5px 5px;background-color:#f8f8f8">
+                         <div style="padding-top:10px;padding-left:24px;padding-bottom:10px;color: #333;font-size: 1.5em;">
+                             <i style="font-size: initial;"></i> {{Statistiques par mois de consommation d'électricité}}
+                         </div>
+                         <div style="min-height: 30px;">
+                           <img src="plugins/dom4_otg/desktop/php/elec.jpg"; width="150" />
+                           <i style="font-size: 1.5em;">{{Consommation totale, sur l'année}}</i>
+                         </div>
+                         <div id='div_graph_stat_totale' style="font-size: 1.2em;"></div>
+                         <div style="min-height: 30px;">
+                           <img src="plugins/dom4_otg/desktop/php/elec.jpg"; width="150" />
+                           <i style="font-size: 1.5em;">{{Consommation totale, sur le dernier mois}}</i>
+                         </div>
+                         <div id='div_graph_detstat_totale' style="font-size: 1.2em;"></div>
+                     </fieldset>
                  </form>
               </div>
           </div>

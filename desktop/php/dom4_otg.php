@@ -126,7 +126,6 @@ $nb_pieces = 12;
 									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked>{{Visible}}</label>
 								</div>
 							</div>
-
 							<legend><i class="fas fa-cogs"></i> {{Nom des pièces chauffées et Température mesurées}}</legend>
               <?php
               for ($piece = 1; $piece<=$nb_pieces; $piece++) {
@@ -173,6 +172,20 @@ $nb_pieces = 12;
                 echo '</div>';
               }
               ?>
+
+							<legend><i class="fas fa-cogs"></i> {{Suivi de consommation Electrique}}</legend>
+              <div class="form-group">
+              <label class="col-lg-2 control-label">{{Info de consommation électrique}}</label>
+              <div class="col-lg-3">
+              <div class="input-group">
+              <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="conso_elec">
+              <span class="input-group-btn">
+              <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+              </span>
+              </div>
+              </div>
+              </div>
+              
 
 						</div>
 					</fieldset>
